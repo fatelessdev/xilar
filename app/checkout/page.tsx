@@ -5,16 +5,27 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import Link from "next/link"
 import { Check, CreditCard, Truck, MapPin } from "lucide-react"
+import { CheckoutBargain } from "@/components/features/checkout-bargain"
 
 export default function CheckoutPage() {
     const { items, totalPrice, clearCart } = useCart()
     const [step, setStep] = useState(1)
     const [orderPlaced, setOrderPlaced] = useState(false)
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+
+    const handleApplyCoupon = (discount: number, code: string) => {
+        setAppliedCoupon({ code, discount })
+    }
 
     const handlePlaceOrder = () => {
         setOrderPlaced(true)
         clearCart()
     }
+
+    // Calculate final total with discount
+    const shippingCost = totalPrice >= 2000 ? 0 : 99
+    const discount = appliedCoupon?.discount || 0
+    const finalTotal = totalPrice + shippingCost - discount
 
     if (items.length === 0 && !orderPlaced) {
         return (
@@ -42,6 +53,9 @@ export default function CheckoutPage() {
                     <p className="text-muted-foreground">
                         Thank you for shopping with XILAR. Your order has been placed and will be delivered soon.
                     </p>
+                    {appliedCoupon && (
+                        <p className="text-sm text-gold">You saved ₹{appliedCoupon.discount} with coupon {appliedCoupon.code}!</p>
+                    )}
                     <p className="text-sm text-muted-foreground">Order ID: #XIL{Date.now().toString().slice(-8)}</p>
                     <Link href="/shop">
                         <Button className="rounded-none h-12 px-8 uppercase tracking-widest">
@@ -55,13 +69,13 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="px-6 py-8 border-b border-white/10">
+            <div className="px-6 py-8 border-b border-border">
                 <h1 className="text-3xl font-black tracking-tighter uppercase">Checkout</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 {/* Form Section */}
-                <div className="p-6 lg:p-12 space-y-8 border-r border-white/10">
+                <div className="p-6 lg:p-12 space-y-8 border-r border-border">
                     {/* Progress */}
                     <div className="flex items-center gap-4 text-sm">
                         <span className={step >= 1 ? "text-foreground" : "text-muted-foreground"}>1. Shipping</span>
@@ -134,6 +148,61 @@ export default function CheckoutPage() {
                                     </label>
                                 ))}
                             </div>
+
+                            {/* Coupon Code Input */}
+                            <div className="space-y-3 pt-4 border-t border-border">
+                                <h3 className="text-sm font-bold uppercase tracking-wide">Have a coupon code?</h3>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        id="couponInput"
+                                        placeholder="Enter coupon code"
+                                        className="flex-1 h-12 px-4 bg-secondary/50 border border-input rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-ring uppercase"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        className="h-12 px-6 rounded-none uppercase tracking-wide"
+                                        onClick={() => {
+                                            const input = document.getElementById("couponInput") as HTMLInputElement
+                                            const code = input?.value?.trim().toUpperCase()
+                                            if (!code) return
+
+                                            // Validate BARGAIN codes (BARGAIN + amount + 4 chars)
+                                            const bargainMatch = code.match(/^BARGAIN(\d+)[A-Z]{4}$/)
+                                            if (bargainMatch) {
+                                                const discountAmount = parseInt(bargainMatch[1])
+                                                if ([50, 100, 150, 200].includes(discountAmount)) {
+                                                    handleApplyCoupon(discountAmount, code)
+                                                    input.value = ""
+                                                } else {
+                                                    alert("Invalid coupon code")
+                                                }
+                                            } else {
+                                                alert("Invalid coupon code. Try getting one from the bargain bot!")
+                                            }
+                                        }}
+                                        disabled={!!appliedCoupon}
+                                    >
+                                        Apply
+                                    </Button>
+                                </div>
+                                {appliedCoupon && (
+                                    <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30">
+                                        <span className="text-sm text-green-600 dark:text-green-400">
+                                            ✓ Coupon {appliedCoupon.code} applied! You save ₹{appliedCoupon.discount}
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs text-muted-foreground hover:text-foreground"
+                                            onClick={() => setAppliedCoupon(null)}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex gap-4">
                                 <Button variant="outline" className="flex-1 h-14 rounded-none uppercase" onClick={() => setStep(1)}>
                                     Back
@@ -153,7 +222,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="space-y-4">
                                 {items.map((item) => (
-                                    <div key={`${item.id}-${item.size}`} className="flex gap-4 border-b border-white/10 pb-4">
+                                    <div key={`${item.id}-${item.size}`} className="flex gap-4 border-b border-border pb-4">
                                         <div
                                             className="w-16 h-20 bg-cover bg-center bg-neutral-900 flex-shrink-0"
                                             style={{ backgroundImage: `url(${item.image})` }}
@@ -188,21 +257,34 @@ export default function CheckoutPage() {
                                 <span>₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
                             </div>
                         ))}
-                        <hr className="border-white/10" />
+                        <hr className="border-border" />
                         <div className="flex justify-between text-sm">
                             <span>Subtotal</span>
                             <span>₹{totalPrice.toLocaleString("en-IN")}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span>Shipping</span>
-                            <span>{totalPrice >= 2000 ? "FREE" : "₹99"}</span>
+                            <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
                         </div>
-                        <hr className="border-white/10" />
+                        {appliedCoupon && (
+                            <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                                <span>Discount ({appliedCoupon.code})</span>
+                                <span>-₹{appliedCoupon.discount}</span>
+                            </div>
+                        )}
+                        <hr className="border-border" />
                         <div className="flex justify-between text-lg font-bold">
                             <span>Total</span>
-                            <span>₹{(totalPrice + (totalPrice >= 2000 ? 0 : 99)).toLocaleString("en-IN")}</span>
+                            <span>₹{Math.max(0, finalTotal).toLocaleString("en-IN")}</span>
                         </div>
                     </div>
+
+                    {/* Bargain Chatbot */}
+                    <CheckoutBargain
+                        totalPrice={totalPrice}
+                        onApplyCoupon={handleApplyCoupon}
+                        appliedCoupon={appliedCoupon}
+                    />
                 </div>
             </div>
         </div>

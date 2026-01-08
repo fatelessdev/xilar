@@ -38,47 +38,52 @@
   --radius: 0rem;
   /* Squared geometry */
 
+  /* YoungLA-inspired gold accent */
+  --gold: #c9a962;
+  --gold-foreground: #0a0a0a;
+  --gold-light: #d4b87a;
+  --gold-dark: #a88e4a;
+
   /* Glassmorphism utilities */
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-bg: rgba(255, 255, 255, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    /* Pure black for Yeezy vibe */
-    --foreground: #ffffff;
+/* Dark mode - class-based for manual toggle */
+.dark {
+  --background: #000000;
+  /* Pure black for Yeezy vibe */
+  --foreground: #ffffff;
 
-    --card: #09090b;
-    /* Zinc-950 */
-    --card-foreground: #ffffff;
+  --card: #09090b;
+  /* Zinc-950 */
+  --card-foreground: #ffffff;
 
-    --popover: #000000;
-    --popover-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
 
-    --primary: #ffffff;
-    --primary-foreground: #000000;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
 
-    --secondary: #27272a;
-    /* Zinc-800 */
-    --secondary-foreground: #ffffff;
+  --secondary: #27272a;
+  /* Zinc-800 */
+  --secondary-foreground: #ffffff;
 
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
 
-    --accent: #27272a;
-    --accent-foreground: #ffffff;
+  --accent: #27272a;
+  --accent-foreground: #ffffff;
 
-    --destructive: #7f1d1d;
-    --destructive-foreground: #ffffff;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #ffffff;
 
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #d4d4d8;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
 
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(0, 0, 0, 0.4);
-  }
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -127,4 +132,55 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-2px);
+}
+
+/* YoungLA-inspired gold utilities */
+.text-gold {
+  color: var(--gold);
+}
+
+.bg-gold {
+  background-color: var(--gold);
+}
+
+.border-gold {
+  border-color: var(--gold);
+}
+
+/* Announcement bar */
+.announcement-bar {
+  background-color: #000000;
+  color: #ffffff;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.announcement-bar .highlight {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Star rating */
+.star-rating {
+  color: var(--foreground);
+  display: inline-flex;
+  gap: 1px;
+}
+
+.star-rating .star-filled {
+  fill: currentColor;
+}
+
+/* Sold out badge */
+.badge-sold-out {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
 }
