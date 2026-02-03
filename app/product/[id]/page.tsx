@@ -14,9 +14,10 @@ async function getProduct(id: string) {
 }
 
 export async function generateMetadata(
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
-    const product = await getProduct(params.id)
+    const { id } = await params
+    const product = await getProduct(id)
 
     if (!product) {
         return {
@@ -62,9 +63,10 @@ export async function generateMetadata(
 export default async function ProductPage({
     params,
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
-    const product = await getProduct(params.id)
+    const { id } = await params
+    const product = await getProduct(id)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
     const jsonLd = product ? {
@@ -94,7 +96,7 @@ export default async function ProductPage({
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <ProductClient id={params.id} />
+            <ProductClient id={id} />
         </>
     )
 }

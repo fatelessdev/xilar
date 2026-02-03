@@ -30,6 +30,7 @@ export function ProductClient({ id }: { id: string }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [selectedSize, setSelectedSize] = useState<string | null>(null)
+    const [selectedColor, setSelectedColor] = useState<string | null>(null)
     const [selectedImage, setSelectedImage] = useState(0)
     const [added, setAdded] = useState(false)
     const { addItem } = useCart()
@@ -96,6 +97,7 @@ export function ProductClient({ id }: { id: string }) {
             displayPrice: displayPrice,
             image: images[0],
             size: selectedSize,
+            color: selectedColor || undefined,
         })
         setAdded(true)
         setTimeout(() => setAdded(false), 2000)
@@ -175,6 +177,32 @@ export function ProductClient({ id }: { id: string }) {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Color Selection */}
+                        {product.colors && product.colors.length > 0 && (
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold uppercase tracking-widest flex items-center justify-between">
+                                    <span>Select Color</span>
+                                    {selectedColor && <span className="text-muted-foreground font-normal normal-case">{selectedColor}</span>}
+                                </label>
+                                <div className="flex gap-3 flex-wrap">
+                                    {product.colors.map((color) => (
+                                        <button
+                                            key={color.name}
+                                            type="button"
+                                            className={`w-10 h-10 rounded-full border-2 transition-all ${
+                                                selectedColor === color.name 
+                                                    ? "ring-2 ring-offset-2 ring-foreground ring-offset-background border-foreground" 
+                                                    : "border-border hover:border-foreground"
+                                            }`}
+                                            style={{ backgroundColor: color.hex }}
+                                            onClick={() => setSelectedColor(color.name)}
+                                            title={color.name}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Stock indicator */}
                         {product.stock <= 5 && product.stock > 0 && (

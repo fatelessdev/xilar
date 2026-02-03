@@ -44,21 +44,23 @@ export function CartDrawer() {
                         </div>
                     ) : (
                         items.map((item) => (
-                            <div key={`${item.id}-${item.size}`} className="flex gap-4 border-b border-white/10 pb-4">
+                            <div key={`${item.id}-${item.size}-${item.color || ''}`} className="flex gap-4 border-b border-white/10 pb-4">
                                 <div
                                     className="w-20 h-24 bg-cover bg-center bg-neutral-900 flex-shrink-0"
                                     style={{ backgroundImage: `url(${item.image})` }}
                                 />
                                 <div className="flex-1 space-y-1">
                                     <h3 className="font-medium">{item.name}</h3>
-                                    <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Size: {item.size}{item.color && ` • ${item.color}`}
+                                    </p>
                                     <p className="font-semibold">{item.displayPrice}</p>
                                     <div className="flex items-center gap-2 pt-2">
                                         <Button
                                             variant="outline"
                                             size="icon"
                                             className="h-8 w-8 rounded-none"
-                                            onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
+                                            onClick={() => updateQuantity(item.id, item.size, item.quantity - 1, item.color)}
                                         >
                                             <Minus className="h-3 w-3" />
                                         </Button>
@@ -67,7 +69,7 @@ export function CartDrawer() {
                                             variant="outline"
                                             size="icon"
                                             className="h-8 w-8 rounded-none"
-                                            onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                                            onClick={() => updateQuantity(item.id, item.size, item.quantity + 1, item.color)}
                                         >
                                             <Plus className="h-3 w-3" />
                                         </Button>
@@ -77,7 +79,7 @@ export function CartDrawer() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 self-start"
-                                    onClick={() => removeItem(item.id, item.size)}
+                                    onClick={() => removeItem(item.id, item.size, item.color)}
                                 >
                                     <X className="h-4 w-4" />
                                 </Button>
