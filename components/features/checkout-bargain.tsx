@@ -1,76 +1,173 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { MessageCircle, X, Send, Copy, Check, Sparkles } from "lucide-react"
+import { X, Send, Copy, Check, Sparkles, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Message } from "ai"
+
+interface CartItem {
+    id: string
+    name: string
+    price: number
+    quantity: number
+}
 
 interface CheckoutBargainProps {
+    cartItems: CartItem[]
     totalPrice: number
     onApplyCoupon: (discount: number, code: string) => void
     appliedCoupon: { code: string; discount: number } | null
 }
 
-const DISCOUNT_OPTIONS = [50, 100, 150, 200]
-
-function generateCouponCode(discount: number): string {
-    const suffix = Math.random().toString(36).substring(2, 6).toUpperCase()
-    return `BARGAIN${discount}${suffix}`
-}
-
-export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: CheckoutBargainProps) {
+export function CheckoutBargain({ cartItems, totalPrice, onApplyCoupon, appliedCoupon }: CheckoutBargainProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [showPrompt, setShowPrompt] = useState(true)
-    const [messages, setMessages] = useState<{ role: "ai" | "user"; text: string }[]>([])
-    const [couponGenerated, setCouponGenerated] = useState<{ code: string; discount: number } | null>(null)
+    const [couponGenerated, setCouponGenerated] = useState<{ code: string; discount: number; expiresAt: number } | null>(null)
     const [copied, setCopied] = useState(false)
-    const [isTyping, setIsTyping] = useState(false)
+    const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
+    const [couponExpired, setCouponExpired] = useState(false)
+    const [messages, setMessages] = useState<Message[]>([])
+    const [input, setInput] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [negotiationRound, setNegotiationRound] = useState(0)
+    const chatContainerRef = useRef<HTMLDivElement>(null)
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value)
+    }
+
+    const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+        e?.preventDefault()
+        if (!input.trim() || isLoading) return
+
+        const userMessage: Message = {
+            id: crypto.randomUUID(),
+            role: "user",
+            content: input.trim()
+        }
+
+        setMessages(prev => [...prev, userMessage])
+        setInput("")
+        setIsLoading(true)
+
+        // Increment round for each user message
+        const currentRound = negotiationRound + 1
+        setNegotiationRound(currentRound)
+
+        try {
+            const response = await fetch("/api/bargain", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [...messages, userMessage],
+                    cartItems: cartItems.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.price
+                    })),
+                    cartTotal: totalPrice,
+                    negotiationRound: currentRound
+                })
+            })
+
+            if (!response.ok) throw new Error("Failed to get response")
+
+            // Check headers for coupon info
+            const couponCode = response.headers.get("X-Coupon-Code")
+            const couponDiscount = response.headers.get("X-Coupon-Discount")
+            const couponExpires = response.headers.get("X-Coupon-Expires")
+
+            if (couponCode && couponDiscount && couponExpires) {
+                const expiresAt = parseInt(couponExpires)
+                setCouponGenerated({
+                    code: couponCode,
+                    discount: parseInt(couponDiscount),
+                    expiresAt
+                })
+                setCouponExpired(false)
+                setTimeRemaining(Math.floor((expiresAt - Date.now()) / 1000))
+            }
+
+            // Stream the response
+            const reader = response.body?.getReader()
+            const decoder = new TextDecoder()
+
+            const assistantMessage: Message = {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: ""
+            }
+
+            setMessages(prev => [...prev, assistantMessage])
+
+            if (reader) {
+                let done = false
+                while (!done) {
+                    const { value, done: readerDone } = await reader.read()
+                    done = readerDone
+                    if (value) {
+                        const chunk = decoder.decode(value, { stream: true })
+                        assistantMessage.content += chunk
+                        setMessages(prev => 
+                            prev.map(m => m.id === assistantMessage.id ? { ...m, content: assistantMessage.content } : m)
+                        )
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Bargain error:", error)
+            setMessages(prev => [...prev, {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: "Oops, something went wrong! Let's try again 😅"
+            }])
+        } finally {
+            setIsLoading(false)
+        }
+    }, [input, isLoading, messages, cartItems, totalPrice, negotiationRound])
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (!couponGenerated || couponExpired) return
+
+        const interval = setInterval(() => {
+            const remaining = Math.max(0, Math.floor((couponGenerated.expiresAt - Date.now()) / 1000))
+            setTimeRemaining(remaining)
+
+            if (remaining === 0) {
+                setCouponExpired(true)
+                clearInterval(interval)
+            }
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [couponGenerated, couponExpired])
+
+    // Auto-scroll chat
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+        }
+    }, [messages])
 
     const handleOpenBargain = () => {
         setShowPrompt(false)
         setIsOpen(true)
 
-        // Initial AI greeting
-        setIsTyping(true)
-        setTimeout(() => {
-            setMessages([
-                {
-                    role: "ai",
-                    text: "Hey there! 👋 Looking for a deal today? I can hook you up with a special discount coupon!"
-                }
-            ])
-            setIsTyping(false)
-
-            // Generate coupon after greeting
-            setTimeout(() => {
-                generateCoupon()
-            }, 1500)
-        }, 800)
-    }
-
-    const generateCoupon = () => {
-        setIsTyping(true)
-        setTimeout(() => {
-            // Calculate max discount based on total (up to ₹200, but not more than 20% of total)
-            const maxDiscount = Math.min(200, Math.floor(totalPrice * 0.2))
-            const validOptions = DISCOUNT_OPTIONS.filter(d => d <= maxDiscount)
-            const discount = validOptions.length > 0
-                ? validOptions[Math.floor(Math.random() * validOptions.length)]
-                : DISCOUNT_OPTIONS[0]
-
-            const code = generateCouponCode(discount)
-            setCouponGenerated({ code, discount })
-
-            setMessages(prev => [...prev, {
-                role: "ai",
-                text: `🎉 You got lucky! Here's your exclusive discount:\n\n**₹${discount} OFF**\n\nUse code: **${code}**\n\nCopy it and apply to your order!`
+        // Send initial greeting message
+        if (messages.length === 0) {
+            setMessages([{
+                id: "system-greeting",
+                role: "assistant",
+                content: "Hey there! 👋 Looking for a deal on your cart? Tell me - kitna discount chahiye?"
             }])
-            setIsTyping(false)
-        }, 1200)
+        }
     }
 
     const handleCopyCode = async () => {
-        if (couponGenerated) {
+        if (couponGenerated && !couponExpired) {
             await navigator.clipboard.writeText(couponGenerated.code)
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
@@ -78,17 +175,31 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
     }
 
     const handleApplyCoupon = () => {
-        if (couponGenerated && !appliedCoupon) {
+        if (couponGenerated && !appliedCoupon && !couponExpired) {
             onApplyCoupon(couponGenerated.discount, couponGenerated.code)
-            setMessages(prev => [...prev, {
-                role: "ai",
-                text: `✅ Awesome! Coupon **${couponGenerated.code}** applied! You're saving ₹${couponGenerated.discount} on this order. Enjoy your purchase! 🛍️`
-            }])
         }
     }
 
     const handleSkip = () => {
         setShowPrompt(false)
+    }
+
+    const handleReNegotiate = () => {
+        setCouponGenerated(null)
+        setCouponExpired(false)
+        setTimeRemaining(null)
+        setNegotiationRound(0)
+        setMessages([{
+            id: "re-negotiate",
+            role: "assistant",
+            content: "Okay let's try again! 🔄 What discount are you looking for this time?"
+        }])
+    }
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60)
+        const secs = seconds % 60
+        return `${mins}:${secs.toString().padStart(2, '0')}`
     }
 
     // If coupon already applied, don't show bargain option
@@ -117,7 +228,7 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                             </div>
                             <div>
                                 <p className="font-semibold text-sm">Want a bargain? 💰</p>
-                                <p className="text-xs text-muted-foreground">Chat with us for an exclusive discount!</p>
+                                <p className="text-xs text-muted-foreground">Negotiate with our AI for an exclusive discount!</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -149,7 +260,7 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                         <div className="p-4 bg-gold text-black flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                                <span className="font-bold tracking-tight uppercase text-sm">Bargain Bot</span>
+                                <span className="font-bold tracking-tight uppercase text-sm">Bargain AI</span>
                             </div>
                             <Button
                                 variant="ghost"
@@ -162,9 +273,9 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                         </div>
 
                         {/* Chat Area */}
-                        <div className="h-72 p-4 overflow-y-auto space-y-4 bg-secondary/20">
-                            {messages.map((msg, idx) => (
-                                <div key={idx} className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}>
+                        <div ref={chatContainerRef} className="h-72 p-4 overflow-y-auto space-y-4 bg-secondary/20">
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}>
                                     <div className={cn(
                                         "max-w-[85%] p-3 text-sm",
                                         msg.role === 'user'
@@ -172,14 +283,14 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                                             : "bg-card border border-border"
                                     )}>
                                         <div className="whitespace-pre-wrap">
-                                            {msg.text.split('**').map((part, i) =>
+                                            {msg.content.split('**').map((part, i) =>
                                                 i % 2 === 1 ? <strong key={i}>{part}</strong> : part
                                             )}
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            {isTyping && (
+                            {isLoading && (
                                 <div className="flex justify-start">
                                     <div className="bg-card border border-border p-3 text-sm">
                                         <div className="flex gap-1">
@@ -192,12 +303,35 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                             )}
                         </div>
 
-                        {/* Actions */}
+                        {/* Coupon Display & Timer */}
                         {couponGenerated && (
                             <div className="p-4 border-t bg-background space-y-3">
+                                {/* Timer */}
+                                {timeRemaining !== null && (
+                                    <div className={cn(
+                                        "flex items-center justify-center gap-2 text-sm font-medium",
+                                        couponExpired ? "text-red-500" : timeRemaining <= 60 ? "text-orange-500" : "text-green-600"
+                                    )}>
+                                        <Clock className="h-4 w-4" />
+                                        {couponExpired ? (
+                                            <span>Code expired!</span>
+                                        ) : (
+                                            <span>Expires in {formatTime(timeRemaining)}</span>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Coupon Display */}
-                                <div className="flex items-center gap-2 p-3 bg-gold/10 border border-gold/30">
-                                    <code className="flex-1 font-mono font-bold text-lg text-center">
+                                <div className={cn(
+                                    "flex items-center gap-2 p-3 border",
+                                    couponExpired 
+                                        ? "bg-red-500/10 border-red-500/30 opacity-60" 
+                                        : "bg-gold/10 border-gold/30"
+                                )}>
+                                    <code className={cn(
+                                        "flex-1 font-mono font-bold text-lg text-center",
+                                        couponExpired && "line-through"
+                                    )}>
                                         {couponGenerated.code}
                                     </code>
                                     <Button
@@ -205,13 +339,21 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                                         variant="outline"
                                         className="rounded-none"
                                         onClick={handleCopyCode}
+                                        disabled={couponExpired}
                                     >
                                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                     </Button>
                                 </div>
 
-                                {/* Apply Button */}
-                                {!appliedCoupon ? (
+                                {/* Apply Button or Re-negotiate */}
+                                {couponExpired ? (
+                                    <Button
+                                        className="w-full h-12 rounded-none uppercase tracking-widest"
+                                        onClick={handleReNegotiate}
+                                    >
+                                        Try Again 🔄
+                                    </Button>
+                                ) : !appliedCoupon ? (
                                     <Button
                                         className="w-full h-12 rounded-none uppercase tracking-widest bg-gold text-black hover:bg-gold-dark"
                                         onClick={handleApplyCoupon}
@@ -232,6 +374,30 @@ export function CheckoutBargain({ totalPrice, onApplyCoupon, appliedCoupon }: Ch
                                     Continue to Checkout
                                 </Button>
                             </div>
+                        )}
+
+                        {/* Chat Input (only if no coupon generated yet) */}
+                        {!couponGenerated && (
+                            <form onSubmit={handleSubmit} className="p-4 border-t bg-background">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={handleInputChange}
+                                        placeholder="Ask for a discount..."
+                                        className="flex-1 px-3 py-2 border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-gold"
+                                        disabled={isLoading}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        size="icon"
+                                        className="rounded-none bg-gold text-black hover:bg-gold-dark"
+                                        disabled={isLoading || !input.trim()}
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </form>
                         )}
                     </div>
                 </div>

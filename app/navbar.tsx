@@ -48,7 +48,7 @@ export function Navbar() {
 
                     {/* Questions - Desktop */}
                     <div className="hidden lg:flex items-center text-xs tracking-wide text-muted-foreground">
-                        QUESTIONS? <span className="ml-2 text-foreground">+91 98765-43210</span>
+                        QUESTIONS? <span className="ml-2 text-foreground">+91 8090644991</span>
                     </div>
 
                     {/* Logo - Centered */}

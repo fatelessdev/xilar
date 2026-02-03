@@ -12,7 +12,7 @@ export default function AboutPage() {
                     </p>
 
                     <p>
-                        Founded by <span className="text-foreground font-medium">Aman Singh</span> in Phagwara, Punjab, XILAR delivers versatile, unisex pieces focused on comfort and movement. From oversized cargos to essential tees, every piece is designed to be stacked, styled, and worn your way.
+                        Founded by <span className="text-foreground font-medium">Aman Singh</span> in Lucknow, XILAR delivers versatile, unisex pieces focused on comfort and movement. From oversized cargos to essential tees, every piece is designed to be stacked, styled, and worn your way.
                     </p>
 
                     <div className="border-l-2 border-foreground pl-6 py-2 my-12">

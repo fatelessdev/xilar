@@ -1,40 +1,39 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Search, SlidersHorizontal, X } from "lucide-react"
+import { Search, SlidersHorizontal, X, Loader2 } from "lucide-react"
 
 interface Product {
     id: string
     name: string
-    price: number
-    displayPrice: string
-    image: string
+    slug: string
+    sellingPrice: string
+    mrp: string
+    images: string[]
     category: string
     gender: "men" | "women" | "unisex"
-    size: string[]
+    sizes: string[]
     isNew?: boolean
+    stock: number
 }
 
-const ALL_PRODUCTS: Product[] = [
-    { id: "1", name: "Oversized Cargo", price: 1999, displayPrice: "₹1,999", image: "/clothes/pants1.jpeg", category: "Bottoms", gender: "unisex", size: ["S", "M", "L", "XL"] },
-    { id: "2", name: "Essential Tee", price: 899, displayPrice: "₹899", image: "/clothes/shirt1.jpeg", category: "Tops", gender: "unisex", size: ["S", "M", "L", "XL"], isNew: true },
-    { id: "3", name: "Denim Jacket", price: 2499, displayPrice: "₹2,499", image: "/clothes/jackets-men1.jpeg", category: "Outerwear", gender: "men", size: ["M", "L", "XL"] },
-    { id: "4", name: "Baggy Jeans", price: 2299, displayPrice: "₹2,299", image: "/clothes/denim1.jpeg", category: "Denim", gender: "unisex", size: ["S", "M", "L", "XL"] },
-    { id: "5", name: "Classic Shirt", price: 1299, displayPrice: "₹1,299", image: "/clothes/shirt2.jpeg", category: "Tops", gender: "men", size: ["S", "M", "L"] },
-    { id: "6", name: "Relaxed Fit Shirt", price: 1199, displayPrice: "₹1,199", image: "/clothes/shirt3.jpeg", category: "Tops", gender: "women", size: ["XS", "S", "M", "L"] },
-    { id: "7", name: "Structured Shirt", price: 1399, displayPrice: "₹1,399", image: "/clothes/shirt4.jpeg", category: "Tops", gender: "unisex", size: ["S", "M", "L", "XL"], isNew: true },
-    { id: "8", name: "Premium Tee", price: 999, displayPrice: "₹999", image: "/clothes/tshirt1.jpeg", category: "Tops", gender: "unisex", size: ["S", "M", "L", "XL"] },
-    { id: "9", name: "Linen Blend", price: 1599, displayPrice: "₹1,599", image: "/clothes/shirts5.jpeg", category: "Tops", gender: "men", size: ["M", "L", "XL"] },
-    { id: "10", name: "Cropped Top", price: 799, displayPrice: "₹799", image: "/clothes/topwear-women.jpeg", category: "Tops", gender: "women", size: ["XS", "S", "M"] },
-    { id: "11", name: "Oversized Blouse", price: 1099, displayPrice: "₹1,099", image: "/clothes/topwear-women2.jpeg", category: "Tops", gender: "women", size: ["S", "M", "L"], isNew: true },
-    { id: "12", name: "Graphic Tee", price: 1199, displayPrice: "₹1,199", image: "/clothes/topwear-men1.jpeg", category: "Tops", gender: "men", size: ["S", "M", "L", "XL"] },
-]
-
-const CATEGORIES = ["All", "Tops", "Bottoms", "Denim", "Outerwear"]
-const SIZES = ["XS", "S", "M", "L", "XL"]
+const CATEGORIES = ["All", "tshirt", "shirt", "cargo", "jogger", "jeans", "hoodie", "jacket", "shorts", "accessory"]
+const CATEGORY_LABELS: Record<string, string> = {
+    "All": "All",
+    "tshirt": "T-Shirts",
+    "shirt": "Shirts",
+    "cargo": "Cargo",
+    "jogger": "Joggers",
+    "jeans": "Jeans",
+    "hoodie": "Hoodies",
+    "jacket": "Jackets",
+    "shorts": "Shorts",
+    "accessory": "Accessories",
+}
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 const PRICE_RANGES = [
     { label: "All Prices", min: 0, max: Infinity },
     { label: "Under ₹1000", min: 0, max: 1000 },
@@ -50,6 +49,8 @@ interface ShopClientProps {
 }
 
 export function ShopClient({ genderFilter = "all", title = "All Products", subtitle, initialSearch = "" }: ShopClientProps) {
+    const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState(initialSearch)
     const [selectedCategory, setSelectedCategory] = useState("All")
     const [selectedSize, setSelectedSize] = useState<string | null>(null)
@@ -57,12 +58,33 @@ export function ShopClient({ genderFilter = "all", title = "All Products", subti
     const [showFilters, setShowFilters] = useState(false)
     const [visibleCount, setVisibleCount] = useState(8)
 
-    const filteredProducts = useMemo(() => {
-        return ALL_PRODUCTS.filter((product) => {
-            // Gender filter
-            if (genderFilter !== "all" && product.gender !== genderFilter && product.gender !== "unisex") {
-                return false
+    // Fetch products from API
+    useEffect(() => {
+        async function fetchProducts() {
+            try {
+                setLoading(true)
+                const params = new URLSearchParams()
+                params.set("limit", "100")
+                if (genderFilter !== "all") {
+                    params.set("gender", genderFilter)
+                }
+                
+                const res = await fetch(`/api/products?${params.toString()}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setProducts(data.products || [])
+                }
+            } catch (error) {
+                console.error("Failed to fetch products:", error)
+            } finally {
+                setLoading(false)
             }
+        }
+        fetchProducts()
+    }, [genderFilter])
+
+    const filteredProducts = useMemo(() => {
+        return products.filter((product) => {
             // Search
             if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false
@@ -72,16 +94,17 @@ export function ShopClient({ genderFilter = "all", title = "All Products", subti
                 return false
             }
             // Size
-            if (selectedSize && !product.size.includes(selectedSize)) {
+            if (selectedSize && !product.sizes.includes(selectedSize)) {
                 return false
             }
             // Price
-            if (product.price < selectedPriceRange.min || product.price > selectedPriceRange.max) {
+            const price = parseFloat(product.sellingPrice)
+            if (price < selectedPriceRange.min || price > selectedPriceRange.max) {
                 return false
             }
             return true
         })
-    }, [genderFilter, searchQuery, selectedCategory, selectedSize, selectedPriceRange])
+    }, [products, searchQuery, selectedCategory, selectedSize, selectedPriceRange])
 
     const visibleProducts = filteredProducts.slice(0, visibleCount)
     const hasMore = visibleCount < filteredProducts.length
@@ -98,6 +121,11 @@ export function ShopClient({ genderFilter = "all", title = "All Products", subti
         selectedSize !== null,
         selectedPriceRange !== PRICE_RANGES[0],
     ].filter(Boolean).length
+
+    const formatPrice = (price: string) => {
+        const num = parseFloat(price)
+        return `₹${num.toLocaleString("en-IN")}`
+    }
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -155,7 +183,7 @@ export function ShopClient({ genderFilter = "all", title = "All Products", subti
                                     className="rounded-none h-8 text-xs"
                                     onClick={() => setSelectedCategory(cat)}
                                 >
-                                    {cat}
+                                    {CATEGORY_LABELS[cat] || cat}
                                 </Button>
                             ))}
                         </div>
@@ -201,46 +229,68 @@ export function ShopClient({ genderFilter = "all", title = "All Products", subti
 
             {/* Product Grid */}
             <div className="py-8 px-6">
-                <p className="text-sm text-muted-foreground mb-6">{filteredProducts.length} products</p>
-                {visibleProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {visibleProducts.map((product) => (
-                            <Link href={`/product/${product.id}`} key={product.id} className="group">
-                                <Card className="rounded-none border-0 bg-transparent shadow-none hover-lift">
-                                    <CardContent className="p-0 relative aspect-[3/4] overflow-hidden bg-neutral-100 dark:bg-neutral-900">
-                                        <div
-                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                            style={{ backgroundImage: `url(${product.image})` }}
-                                        />
-                                        {product.isNew && (
-                                            <span className="absolute top-2 left-2 bg-foreground text-background text-xs px-2 py-1 uppercase tracking-wider">
-                                                New
-                                            </span>
-                                        )}
-                                    </CardContent>
-                                    <CardFooter className="flex flex-col items-start p-4 space-y-1">
-                                        <p className="text-xs text-muted-foreground uppercase tracking-wider">{product.category}</p>
-                                        <div className="flex w-full items-center justify-between">
-                                            <h3 className="font-medium tracking-tight text-lg">{product.name}</h3>
-                                            <span className="font-semibold">{product.displayPrice}</span>
-                                        </div>
-                                    </CardFooter>
-                                </Card>
-                            </Link>
-                        ))}
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <div className="text-center py-20">
-                        <p className="text-muted-foreground">No products found matching your filters.</p>
-                        <Button variant="link" onClick={clearFilters} className="mt-2">
-                            Clear all filters
-                        </Button>
-                    </div>
+                    <>
+                        <p className="text-sm text-muted-foreground mb-6">{filteredProducts.length} products</p>
+                        {visibleProducts.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {visibleProducts.map((product) => (
+                                    <Link href={`/product/${product.id}`} key={product.id} className="group">
+                                        <Card className="rounded-none border-0 bg-transparent shadow-none hover-lift">
+                                            <CardContent className="p-0 relative aspect-[3/4] overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+                                                <div
+                                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                                                    style={{ backgroundImage: `url(${product.images?.[0] || "/placeholder.jpg"})` }}
+                                                />
+                                                {product.isNew && (
+                                                    <span className="absolute top-2 left-2 bg-foreground text-background text-xs px-2 py-1 uppercase tracking-wider">
+                                                        New
+                                                    </span>
+                                                )}
+                                                {product.stock === 0 && (
+                                                    <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 uppercase tracking-wider">
+                                                        Sold Out
+                                                    </span>
+                                                )}
+                                            </CardContent>
+                                            <CardFooter className="flex flex-col items-start p-4 space-y-1">
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                                    {CATEGORY_LABELS[product.category] || product.category}
+                                                </p>
+                                                <div className="flex w-full items-center justify-between">
+                                                    <h3 className="font-medium tracking-tight text-lg">{product.name}</h3>
+                                                    <div className="text-right">
+                                                        <span className="font-semibold">{formatPrice(product.sellingPrice)}</span>
+                                                        {parseFloat(product.mrp) > parseFloat(product.sellingPrice) && (
+                                                            <span className="text-xs text-muted-foreground line-through ml-2">
+                                                                {formatPrice(product.mrp)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-20">
+                                <p className="text-muted-foreground">No products found matching your filters.</p>
+                                <Button variant="link" onClick={clearFilters} className="mt-2">
+                                    Clear all filters
+                                </Button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
             {/* Load More */}
-            {hasMore && (
+            {hasMore && !loading && (
                 <div className="py-12 flex justify-center border-t border-white/10">
                     <Button
                         variant="outline"
