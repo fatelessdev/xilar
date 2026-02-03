@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, FileText, Video, XCircle, AlertTriangle } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Return Policy",
+    description: "XILAR return policy for defective or damaged items only. Unboxing video required.",
+    alternates: {
+        canonical: "/policies/returns",
+    },
+    openGraph: {
+        title: "Return Policy | XILAR",
+        description: "XILAR return policy for defective or damaged items only. Unboxing video required.",
+        url: "/policies/returns",
+    },
+}
 
 export default function ReturnPolicyPage() {
     return (

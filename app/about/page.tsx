@@ -1,4 +1,18 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
+
+export const metadata: Metadata = {
+    title: "About",
+    description: "Learn about XILAR — Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury.",
+    alternates: {
+        canonical: "/about",
+    },
+    openGraph: {
+        title: "About XILAR",
+        description: "Learn about XILAR — Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury.",
+        url: "/about",
+    },
+}
 
 export default function AboutPage() {
     return (

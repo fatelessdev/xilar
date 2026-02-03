@@ -1,4 +1,18 @@
+import type { Metadata } from "next"
 import { ProductGrid } from "@/components/features/product-grid"
+
+export const metadata: Metadata = {
+    title: "Summer '25 Collection",
+    description: "Light fabrics. Bold statements. Shop the XILAR Summer '25 collection.",
+    alternates: {
+        canonical: "/collections/summer-25",
+    },
+    openGraph: {
+        title: "Summer '25 Collection | XILAR",
+        description: "Light fabrics. Bold statements. Shop the XILAR Summer '25 collection.",
+        url: "/collections/summer-25",
+    },
+}
 
 export default function Summer25Page() {
     return (

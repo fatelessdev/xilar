@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { FileText, RefreshCw, Truck, CreditCard } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Store Policies",
+    description: "Read XILAR policies on exchanges, returns, refunds, and shipping.",
+    alternates: {
+        canonical: "/policies",
+    },
+    openGraph: {
+        title: "Store Policies | XILAR",
+        description: "Read XILAR policies on exchanges, returns, refunds, and shipping.",
+        url: "/policies",
+    },
+}
 
 export default function PoliciesPage() {
     const policies = [

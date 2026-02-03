@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession, isAdmin } from "@/lib/auth-server";
 import Link from "next/link";
@@ -95,3 +96,14 @@ export default async function AdminLayout({
     </div>
   );
 }
+
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: {
+    index: false,
+    follow: false,
+  },
+  alternates: {
+    canonical: "/admin",
+  },
+};

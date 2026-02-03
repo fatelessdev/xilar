@@ -1,4 +1,18 @@
+import type { Metadata } from "next"
 import { ProductGrid } from "@/components/features/product-grid"
+
+export const metadata: Metadata = {
+    title: "New Arrivals",
+    description: "Fresh drops and first access. Discover the latest XILAR arrivals.",
+    alternates: {
+        canonical: "/new",
+    },
+    openGraph: {
+        title: "New Arrivals | XILAR",
+        description: "Fresh drops and first access. Discover the latest XILAR arrivals.",
+        url: "/new",
+    },
+}
 
 export default function NewArrivalsPage() {
     return (

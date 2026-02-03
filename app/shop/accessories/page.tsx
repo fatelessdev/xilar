@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+    title: "Accessories",
+    description: "Accessories are coming soon. Stay tuned for fresh drops from XILAR.",
+    alternates: {
+        canonical: "/shop/accessories",
+    },
+    openGraph: {
+        title: "Accessories | XILAR",
+        description: "Accessories are coming soon. Stay tuned for fresh drops from XILAR.",
+        url: "/shop/accessories",
+    },
+}
 
 export default function AccessoriesPage() {
     return (

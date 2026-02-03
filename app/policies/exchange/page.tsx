@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, RefreshCw, Clock, Tag, AlertCircle } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Exchange Policy",
+    description: "XILAR exchange policy for size or color issues within 48 hours of delivery.",
+    alternates: {
+        canonical: "/policies/exchange",
+    },
+    openGraph: {
+        title: "Exchange Policy | XILAR",
+        description: "XILAR exchange policy for size or color issues within 48 hours of delivery.",
+        url: "/policies/exchange",
+    },
+}
 
 export default function ExchangePolicyPage() {
     return (

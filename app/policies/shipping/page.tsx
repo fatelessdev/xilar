@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, Truck, Clock, MapPin, IndianRupee, Package } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Shipping Policy",
+    description: "XILAR shipping policy: free shipping above ₹999, standard delivery ₹49, COD +₹50.",
+    alternates: {
+        canonical: "/policies/shipping",
+    },
+    openGraph: {
+        title: "Shipping Policy | XILAR",
+        description: "XILAR shipping policy: free shipping above ₹999, standard delivery ₹49, COD +₹50.",
+        url: "/policies/shipping",
+    },
+}
 
 export default function ShippingPolicyPage() {
     return (

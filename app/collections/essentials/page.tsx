@@ -1,4 +1,18 @@
+import type { Metadata } from "next"
 import { ProductGrid } from "@/components/features/product-grid"
+
+export const metadata: Metadata = {
+    title: "Essentials Collection",
+    description: "The foundation of your wardrobe. Shop XILAR Essentials — versatile, timeless, everyday streetwear.",
+    alternates: {
+        canonical: "/collections/essentials",
+    },
+    openGraph: {
+        title: "Essentials Collection | XILAR",
+        description: "The foundation of your wardrobe. Shop XILAR Essentials — versatile, timeless, everyday streetwear.",
+        url: "/collections/essentials",
+    },
+}
 
 export default function EssentialsPage() {
     return (

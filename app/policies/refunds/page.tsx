@@ -1,5 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, CreditCard, Gift, Calendar, Info } from "lucide-react"
+
+export const metadata: Metadata = {
+    title: "Refund Policy",
+    description: "XILAR refund policy: store credit with a 5% bonus for approved returns.",
+    alternates: {
+        canonical: "/policies/refunds",
+    },
+    openGraph: {
+        title: "Refund Policy | XILAR",
+        description: "XILAR refund policy: store credit with a 5% bonus for approved returns.",
+        url: "/policies/refunds",
+    },
+}
 
 export default function RefundPolicyPage() {
     return (

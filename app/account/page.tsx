@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { User, Package, Heart, LogOut, Shield, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSession, signIn, signUp, signOut } from "@/lib/auth-client"
 import { useSearchParams, useRouter } from "next/navigation"
 
-export default function AccountPage() {
+function AccountContent() {
     const { data: session, isPending } = useSession()
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -231,5 +231,17 @@ export default function AccountPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function AccountPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        }>
+            <AccountContent />
+        </Suspense>
     )
 }

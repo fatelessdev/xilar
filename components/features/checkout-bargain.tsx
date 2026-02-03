@@ -4,7 +4,12 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { X, Send, Copy, Check, Sparkles, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Message } from "ai"
+
+interface BargainMessage {
+    id: string
+    role: "user" | "assistant"
+    content: string
+}
 
 interface CartItem {
     id: string
@@ -27,7 +32,7 @@ export function CheckoutBargain({ cartItems, totalPrice, onApplyCoupon, appliedC
     const [copied, setCopied] = useState(false)
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
     const [couponExpired, setCouponExpired] = useState(false)
-    const [messages, setMessages] = useState<Message[]>([])
+    const [messages, setMessages] = useState<BargainMessage[]>([])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [negotiationRound, setNegotiationRound] = useState(0)
@@ -41,7 +46,7 @@ export function CheckoutBargain({ cartItems, totalPrice, onApplyCoupon, appliedC
         e?.preventDefault()
         if (!input.trim() || isLoading) return
 
-        const userMessage: Message = {
+        const userMessage: BargainMessage = {
             id: crypto.randomUUID(),
             role: "user",
             content: input.trim()
@@ -94,7 +99,7 @@ export function CheckoutBargain({ cartItems, totalPrice, onApplyCoupon, appliedC
             const reader = response.body?.getReader()
             const decoder = new TextDecoder()
 
-            const assistantMessage: Message = {
+            const assistantMessage: BargainMessage = {
                 id: crypto.randomUUID(),
                 role: "assistant",
                 content: ""

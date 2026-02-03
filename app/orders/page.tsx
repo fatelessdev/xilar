@@ -1,9 +1,22 @@
+import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Package, ShoppingBag } from "lucide-react"
 import Link from "next/link"
 import { getUserOrders } from "@/lib/actions/orders"
 import { getServerSession } from "@/lib/auth-server"
 import { redirect } from "next/navigation"
+
+export const metadata: Metadata = {
+    title: "My Orders",
+    description: "View and track your XILAR orders.",
+    robots: {
+        index: false,
+        follow: false,
+    },
+    alternates: {
+        canonical: "/orders",
+    },
+}
 
 const STATUS_COLORS: Record<string, string> = {
     pending: "bg-yellow-500/20 text-yellow-500",
