@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { isAdmin } from "@/lib/auth-server";
 
 export async function GET(
   req: NextRequest,
@@ -20,6 +21,16 @@ export async function GET(
         { error: "Product not found" },
         { status: 404 }
       );
+    }
+
+    if (!product.isActive) {
+      const admin = await isAdmin();
+      if (!admin) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
     }
 
     return NextResponse.json(product);

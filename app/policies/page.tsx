@@ -37,7 +37,7 @@ export default function PoliciesPage() {
         },
         {
             title: "Shipping Policy",
-            description: "Free shipping on orders above ₹999.",
+            description: "Free shipping on orders above ₹1,499.",
             href: "/policies/shipping",
             icon: Truck,
         },
@@ -95,7 +95,7 @@ export default function PoliciesPage() {
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-gold">•</span>
-                            <span><strong>Shipping:</strong> Free above ₹999, otherwise ₹49. COD available (+₹50 fee).</span>
+                            <span><strong>Shipping:</strong> Free above ₹1,499, otherwise ₹49. COD available (+₹50 fee).</span>
                         </li>
                     </ul>
                 </div>

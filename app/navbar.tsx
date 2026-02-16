@@ -29,11 +29,6 @@ export function Navbar() {
 
     return (
         <>
-            {/* Announcement Bar */}
-            <div className="announcement-bar">
-                <span className="highlight">FREE SHIPPING</span> FOR ORDERS OVER ₹2,000
-            </div>
-
             <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
                 <div className="flex h-14 md:h-16 items-center px-4 md:px-6">
                     {/* Mobile Menu Toggle */}

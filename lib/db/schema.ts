@@ -186,6 +186,11 @@ export const orders = pgTable("orders", {
   paymentMethod: text("payment_method"),
   paymentStatus: text("payment_status").default("pending"),
   
+  // Razorpay fields
+  razorpayOrderId: text("razorpay_order_id"),
+  razorpayPaymentId: text("razorpay_payment_id"),
+  razorpaySignature: text("razorpay_signature"),
+  
   // COD fields
   codFee: decimal("cod_fee", { precision: 10, scale: 2 }),
   codAdvancePaid: decimal("cod_advance_paid", { precision: 10, scale: 2 }),

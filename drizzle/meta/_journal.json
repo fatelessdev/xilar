@@ -15,6 +15,13 @@
       "when": 1770123246553,
       "tag": "0001_striped_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771097564493,
+      "tag": "0002_strong_mentallo",
+      "breakpoints": true
     }
   ]
 }

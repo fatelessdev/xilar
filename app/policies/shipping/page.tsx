@@ -4,13 +4,13 @@ import { ArrowLeft, Truck, Clock, MapPin, IndianRupee, Package } from "lucide-re
 
 export const metadata: Metadata = {
     title: "Shipping Policy",
-    description: "XILAR shipping policy: free shipping above ₹999, standard delivery ₹49, COD +₹50.",
+    description: "XILAR shipping policy: free shipping above ₹1,499, standard delivery ₹49, COD +₹50.",
     alternates: {
         canonical: "/policies/shipping",
     },
     openGraph: {
         title: "Shipping Policy | XILAR",
-        description: "XILAR shipping policy: free shipping above ₹999, standard delivery ₹49, COD +₹50.",
+        description: "XILAR shipping policy: free shipping above ₹1,499, standard delivery ₹49, COD +₹50.",
         url: "/policies/shipping",
     },
 }
@@ -36,9 +36,9 @@ export default function ShippingPolicyPage() {
                     </h2>
                     <div className="p-6 bg-gold/10 border border-gold/30 text-center">
                         <p className="text-3xl font-black">FREE SHIPPING</p>
-                        <p className="text-lg mt-2">on orders above ₹999</p>
+                        <p className="text-lg mt-2">on orders above ₹1,499</p>
                         <p className="text-sm text-muted-foreground mt-3">
-                            No minimum items. Just hit ₹999 and shipping is on us!
+                            No minimum items. Just hit ₹1,499 and shipping is on us!
                         </p>
                     </div>
                 </section>
@@ -49,7 +49,7 @@ export default function ShippingPolicyPage() {
                     <div className="p-4 bg-secondary/20 border border-border">
                         <div className="flex justify-between items-center">
                             <div>
-                                <p className="font-medium">Orders below ₹999</p>
+                                <p className="font-medium">Orders below ₹1,499</p>
                                 <p className="text-sm text-muted-foreground">Standard delivery fee applies</p>
                             </div>
                             <div className="text-2xl font-bold">₹49</div>
@@ -149,11 +149,11 @@ export default function ShippingPolicyPage() {
                             </thead>
                             <tbody>
                                 <tr className="border-t border-border">
-                                    <td className="p-3">Above ₹999</td>
+                                    <td className="p-3">Above ₹1,499</td>
                                     <td className="p-3 text-right text-green-600 dark:text-green-400 font-bold">FREE</td>
                                 </tr>
                                 <tr className="border-t border-border">
-                                    <td className="p-3">Below ₹999</td>
+                                    <td className="p-3">Below ₹1,499</td>
                                     <td className="p-3 text-right">₹49</td>
                                 </tr>
                                 <tr className="border-t border-border bg-orange-500/5">
