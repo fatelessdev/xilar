@@ -2,10 +2,13 @@
 
 import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Check, CreditCard, Truck, MapPin, Loader2, AlertCircle } from "lucide-react"
 import { CheckoutBargain } from "@/components/features/checkout-bargain"
+import Script from "next/script"
+
+const CHECKOUT_STORAGE_KEY = "xilar-checkout"
 
 interface ShippingAddress {
     name: string
@@ -19,6 +22,23 @@ interface ShippingAddress {
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "cod"
 
+interface CheckoutState {
+    step: number
+    shippingAddress: ShippingAddress
+    paymentMethod: PaymentMethod
+    appliedCoupon: { code: string; discount: number } | null
+}
+
+function loadCheckoutState(): Partial<CheckoutState> | null {
+    if (typeof window === "undefined") return null
+    try {
+        const saved = sessionStorage.getItem(CHECKOUT_STORAGE_KEY)
+        return saved ? JSON.parse(saved) : null
+    } catch {
+        return null
+    }
+}
+
 export default function CheckoutPage() {
     const { items, totalPrice, clearCart } = useCart()
     const [step, setStep] = useState(1)
@@ -30,6 +50,7 @@ export default function CheckoutPage() {
     const [couponInput, setCouponInput] = useState("")
     const [couponError, setCouponError] = useState<string | null>(null)
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
+    const [hydrated, setHydrated] = useState(false)
     
     const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
         name: "",
@@ -40,6 +61,58 @@ export default function CheckoutPage() {
         state: "",
         pincode: ""
     })
+
+    // Restore checkout state from sessionStorage on mount
+    useEffect(() => {
+        const saved = loadCheckoutState()
+        if (saved) {
+            if (saved.step) setStep(saved.step)
+            if (saved.shippingAddress) setShippingAddress(saved.shippingAddress)
+            if (saved.paymentMethod) setPaymentMethod(saved.paymentMethod)
+            if (saved.appliedCoupon) setAppliedCoupon(saved.appliedCoupon)
+        }
+        setHydrated(true)
+    }, [])
+
+    // Persist checkout state to sessionStorage on changes
+    const persistCheckout = useCallback(() => {
+        if (!hydrated) return
+        try {
+            const state: CheckoutState = { step, shippingAddress, paymentMethod, appliedCoupon }
+            sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(state))
+        } catch { /* ignore quota errors */ }
+    }, [step, shippingAddress, paymentMethod, appliedCoupon, hydrated])
+
+    useEffect(() => {
+        persistCheckout()
+    }, [persistCheckout])
+
+    useEffect(() => {
+        const validateRestoredCoupon = async () => {
+            if (!hydrated || !appliedCoupon?.code) return
+
+            try {
+                const response = await fetch("/api/coupons/validate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code: appliedCoupon.code, orderTotal: totalPrice })
+                })
+                const result = await response.json()
+
+                if (!result.valid) {
+                    setAppliedCoupon(null)
+                    setCouponError(result.error || "Saved coupon is no longer valid")
+                } else if (typeof result.discount === "number" && result.discount !== appliedCoupon.discount) {
+                    setAppliedCoupon({ code: appliedCoupon.code, discount: result.discount })
+                }
+            } catch {
+                setAppliedCoupon(null)
+                setCouponError("Saved coupon could not be verified")
+            }
+        }
+
+        validateRestoredCoupon()
+    }, [appliedCoupon?.code, appliedCoupon?.discount, hydrated, totalPrice])
 
     const handleApplyCoupon = (discount: number, code: string) => {
         setAppliedCoupon({ code, discount })
@@ -78,44 +151,133 @@ export default function CheckoutPage() {
     const handlePlaceOrder = async () => {
         setIsPlacingOrder(true)
 
+        const orderData = {
+            items: items.map(item => ({
+                productId: item.id,
+                productName: item.name,
+                productImage: item.image,
+                size: item.size,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                totalPrice: item.price * item.quantity
+            })),
+            subtotal: totalPrice,
+            shippingCost,
+            discount: appliedCoupon?.discount || 0,
+            couponCode: appliedCoupon?.code,
+            codFee: paymentMethod === "cod" ? 50 : 0,
+            total: finalTotal,
+            shippingAddress,
+            paymentMethod
+        }
+
         try {
-            const response = await fetch("/api/orders", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    items: items.map(item => ({
-                        productId: item.id,
-                        productName: item.name,
-                        productImage: item.image,
-                        size: item.size,
-                        quantity: item.quantity,
-                        unitPrice: item.price,
-                        totalPrice: item.price * item.quantity
-                    })),
-                    subtotal: totalPrice,
-                    shippingCost,
-                    discount: appliedCoupon?.discount || 0,
-                    couponCode: appliedCoupon?.code,
-                    codFee: paymentMethod === "cod" ? 50 : 0,
-                    total: finalTotal,
-                    shippingAddress,
-                    paymentMethod
+            if (paymentMethod === "cod") {
+                // COD flow — create order directly
+                const response = await fetch("/api/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(orderData)
                 })
-            })
-
-            const result = await response.json()
-
-            if (result.success) {
-                setOrderId(result.orderId)
-                setOrderPlaced(true)
-                clearCart()
+                const result = await response.json()
+                if (result.success) {
+                    setOrderId(result.orderId)
+                    setOrderPlaced(true)
+                    clearCart()
+                    sessionStorage.removeItem(CHECKOUT_STORAGE_KEY)
+                } else {
+                    alert(result.error || "Failed to place order. Please try again.")
+                }
             } else {
-                alert(result.error || "Failed to place order. Please try again.")
+                // Online payment flow — Razorpay Checkout
+                // Step 1: Create Razorpay order on server (amount computed server-side)
+                const rzpOrderRes = await fetch("/api/razorpay", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        items: items.map(item => ({ productId: item.id, quantity: item.quantity })),
+                        couponCode: appliedCoupon?.code,
+                        receipt: `order_${Date.now()}`,
+                    })
+                })
+                const rzpOrderData = await rzpOrderRes.json()
+
+                if (!rzpOrderData.success) {
+                    alert("Failed to initiate payment. Please try again.")
+                    setIsPlacingOrder(false)
+                    return
+                }
+
+                // Step 2: Open Razorpay Checkout modal
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                    amount: rzpOrderData.order.amount,
+                    currency: rzpOrderData.order.currency,
+                    name: "XILAR",
+                    description: "Order Payment",
+                    order_id: rzpOrderData.order.id,
+                    handler: async (response: {
+                        razorpay_order_id: string
+                        razorpay_payment_id: string
+                        razorpay_signature: string
+                    }) => {
+                        // Step 3: Verify payment + create order
+                        try {
+                            const verifyRes = await fetch("/api/razorpay/verify", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderData,
+                                })
+                            })
+                            const verifyResult = await verifyRes.json()
+                            if (verifyResult.success) {
+                                setOrderId(verifyResult.orderId)
+                                setOrderPlaced(true)
+                                clearCart()
+                                sessionStorage.removeItem(CHECKOUT_STORAGE_KEY)
+                            } else {
+                                alert(verifyResult.error || "Payment verification failed.")
+                            }
+                        } catch {
+                            alert("Payment verification failed. Please contact support.")
+                        }
+                        setIsPlacingOrder(false)
+                    },
+                    prefill: {
+                        name: shippingAddress.name,
+                        email: shippingAddress.email,
+                        contact: shippingAddress.phone,
+                    },
+                    theme: {
+                        color: "#000000",
+                    },
+                    modal: {
+                        ondismiss: () => {
+                            setIsPlacingOrder(false)
+                        },
+                    },
+                }
+
+                const RazorpayClass = (window as unknown as { Razorpay?: new (opts: typeof options) => { open: () => void } }).Razorpay
+                if (!RazorpayClass) {
+                    alert("Payment gateway is loading. Please try again in a moment.")
+                    setIsPlacingOrder(false)
+                    return
+                }
+                const rzp = new RazorpayClass(options)
+                rzp.open()
+                return // Don't set isPlacingOrder to false — handler/ondismiss will do it
             }
         } catch {
             alert("Failed to place order. Please try again.")
         } finally {
-            setIsPlacingOrder(false)
+            if (paymentMethod === "cod") {
+                setIsPlacingOrder(false)
+            }
         }
     }
 
@@ -130,8 +292,8 @@ export default function CheckoutPage() {
         )
     }
 
-    // Calculate pricing: free shipping above ₹999, otherwise ₹49
-    const shippingCost = totalPrice >= 999 ? 0 : 49
+    // Calculate pricing: free shipping above ₹1499, otherwise ₹49
+    const shippingCost = totalPrice >= 1499 ? 0 : 49
     const codFee = paymentMethod === "cod" ? 50 : 0
     const discount = appliedCoupon?.discount || 0
     const finalTotal = totalPrice + shippingCost + codFee - discount
@@ -187,6 +349,8 @@ export default function CheckoutPage() {
     }
 
     return (
+        <>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <div className="min-h-screen">
             <div className="px-6 py-8 border-b border-border">
                 <h1 className="text-3xl font-black tracking-tighter uppercase">Checkout</h1>
@@ -442,7 +606,7 @@ export default function CheckoutPage() {
                             <span>₹{totalPrice.toLocaleString("en-IN")}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Shipping {totalPrice >= 999 && <span className="text-green-600 dark:text-green-400">(Free above ₹999)</span>}</span>
+                            <span>Shipping {totalPrice >= 1499 && <span className="text-green-600 dark:text-green-400">(Free above ₹1,499)</span>}</span>
                             <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
                         </div>
                         {paymentMethod === "cod" && (
@@ -474,5 +638,6 @@ export default function CheckoutPage() {
                 </div>
             </div>
         </div>
+        </>
     )
 }

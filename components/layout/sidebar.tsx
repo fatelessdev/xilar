@@ -34,8 +34,8 @@ export function Sidebar({ className }: SidebarProps) {
                         <Link href="/collections/essentials" className="block px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-none transition-colors">
                             Essentials
                         </Link>
-                        <Link href="/collections/summer-25" className="block px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-none transition-colors">
-                            Summer &apos;25
+                        <Link href="/collections/summer-26" className="block px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-none transition-colors">
+                            Summer &apos;26
                         </Link>
                     </div>
                 </div>

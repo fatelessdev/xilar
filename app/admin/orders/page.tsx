@@ -1,7 +1,7 @@
 import { getOrders } from "@/lib/actions/admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OrderStatusSelect } from "./status-select";
+import Link from "next/link";
 
 export default async function OrdersPage() {
   const orders = await getOrders();
@@ -24,6 +24,7 @@ export default async function OrdersPage() {
               <th className="text-left p-4 font-medium">Date</th>
               <th className="text-left p-4 font-medium">Customer</th>
               <th className="text-left p-4 font-medium">Total</th>
+              <th className="text-left p-4 font-medium">Payment</th>
               <th className="text-left p-4 font-medium">Status</th>
               <th className="text-right p-4 font-medium">Actions</th>
             </tr>
@@ -31,7 +32,7 @@ export default async function OrdersPage() {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                <td colSpan={7} className="p-8 text-center text-muted-foreground">
                   No orders yet. Orders will appear here when customers make purchases.
                 </td>
               </tr>
@@ -63,15 +64,29 @@ export default async function OrdersPage() {
                     )}
                   </td>
                   <td className="p-4">
+                    <div className="text-sm">
+                      <span className="uppercase">{order.paymentMethod || "—"}</span>
+                    </div>
+                    <div className={`text-xs ${
+                      order.paymentStatus === "paid" 
+                        ? "text-green-600 dark:text-green-400" 
+                        : "text-yellow-600 dark:text-yellow-400"
+                    }`}>
+                      {order.paymentStatus === "paid" ? "Paid" : "Pending"}
+                    </div>
+                  </td>
+                  <td className="p-4">
                     <OrderStatusSelect
                       orderId={order.id}
                       currentStatus={order.status}
                     />
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm">
-                      View Details
-                    </Button>
+                    <Link href={`/admin/orders/${order.id}`}>
+                      <Button variant="ghost" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
                   </td>
                 </tr>
               ))

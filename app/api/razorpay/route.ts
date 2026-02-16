@@ -1,0 +1,87 @@
+import { NextRequest, NextResponse } from "next/server";
+import razorpay from "@/lib/razorpay";
+import { db } from "@/lib/db";
+import { products } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { validateCoupon } from "@/lib/actions/admin";
+import { getServerSession } from "@/lib/auth-server";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { items, couponCode, receipt } = await req.json();
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "No items provided" },
+        { status: 400 }
+      );
+    }
+
+    // Compute total from actual DB prices
+    let subtotal = 0;
+    for (const item of items) {
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+        return NextResponse.json(
+          { success: false, error: "Invalid item quantity" },
+          { status: 400 }
+        );
+      }
+
+      const [product] = await db
+        .select({ sellingPrice: products.sellingPrice })
+        .from(products)
+        .where(eq(products.id, item.productId));
+
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: `Product not found: ${item.productId}` },
+          { status: 400 }
+        );
+      }
+
+      subtotal += parseFloat(product.sellingPrice) * item.quantity;
+    }
+
+    const shipping = subtotal >= 1499 ? 0 : 49;
+
+    // Validate coupon using canonical rules (expiry, usage limits, min order, etc.)
+    let discount = 0;
+    if (couponCode) {
+      const session = await getServerSession();
+      const couponResult = await validateCoupon(couponCode, subtotal, session?.user?.id);
+      if (couponResult.valid) {
+        discount = couponResult.discount;
+      }
+    }
+
+    const total = subtotal + shipping - discount;
+
+    if (total <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Invalid order total" },
+        { status: 400 }
+      );
+    }
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(total * 100), // Convert to paise
+      currency: "INR",
+      receipt: receipt || `receipt_${Date.now()}`,
+    });
+
+    return NextResponse.json({
+      success: true,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+    });
+  } catch (error) {
+    console.error("Razorpay order creation error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create payment order" },
+      { status: 500 }
+    );
+  }
+}

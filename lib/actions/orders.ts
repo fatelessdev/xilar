@@ -42,6 +42,10 @@ export interface CreateOrderInput {
   total: number;
   shippingAddress: ShippingAddress;
   paymentMethod: string;
+  paymentStatus?: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
 }
 
 // ============================================
@@ -90,7 +94,10 @@ export async function createOrder(input: CreateOrderInput) {
         pincode: input.shippingAddress.pincode,
       },
       paymentMethod: input.paymentMethod,
-      paymentStatus: input.paymentMethod === "cod" ? "pending" : "pending",
+      paymentStatus: input.paymentStatus || "pending",
+      razorpayOrderId: input.razorpayOrderId || null,
+      razorpayPaymentId: input.razorpayPaymentId || null,
+      razorpaySignature: input.razorpaySignature || null,
     })
     .returning();
 

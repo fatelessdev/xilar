@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/app/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
-import { BargainAI } from "@/components/features/bargain-ai";
+// import { BargainAI } from "@/components/features/bargain-ai";
 import { CartDrawer } from "@/components/features/cart-drawer";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
@@ -79,7 +79,7 @@ export default function RootLayout({
                 <Sidebar />
                 <main className="flex-1 overflow-x-hidden relative">
                   {children}
-                  <BargainAI />
+                  {/* <BargainAI /> */}
                 </main>
               </div>
               <CartDrawer />

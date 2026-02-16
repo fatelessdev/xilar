@@ -95,7 +95,7 @@ export function ProductAssistant({ productContext }: ProductAssistantProps) {
             } else if (question.includes("return") || question.includes("exchange")) {
                 response = "Exchanges are allowed within 48 hours for size/color issues. Returns only for defects (unboxing video required). Check our policies page for details!"
             } else if (question.includes("shipping") || question.includes("delivery")) {
-                response = "Free shipping on orders above ₹999! Standard delivery takes 5-7 business days. 🚚"
+                response = "Free shipping on orders above ₹1,499! Standard delivery takes 5-7 business days. 🚚"
             } else if (question.includes("discount") || question.includes("bargain") || question.includes("offer")) {
                 response = "Want a discount? Add items to your cart and check out - you can negotiate with our Bargain AI at checkout! 💰"
             } else if (question.includes("price")) {

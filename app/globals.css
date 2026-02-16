@@ -147,22 +147,6 @@ body {
   border-color: var(--gold);
 }
 
-/* Announcement bar */
-.announcement-bar {
-  background-color: #000000;
-  color: #ffffff;
-  text-align: center;
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.announcement-bar .highlight {
-  color: var(--gold);
-  font-weight: 600;
-}
-
 /* Star rating */
 .star-rating {
   color: var(--foreground);

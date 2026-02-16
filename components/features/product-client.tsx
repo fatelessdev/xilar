@@ -240,7 +240,7 @@ export function ProductClient({ id }: { id: string }) {
                                     <Heart className={`h-5 w-5 ${inWishlist ? "fill-current" : ""}`} />
                                 </Button>
                             </div>
-                            <p className="text-xs text-center text-muted-foreground uppercase">Free shipping on orders above ₹999</p>
+                            <p className="text-xs text-center text-muted-foreground uppercase">Free shipping on orders above ₹1,499</p>
                         </div>
 
                         {/* Features */}

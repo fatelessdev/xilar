@@ -90,20 +90,24 @@ CONVERSATION FLOW:
 3. HAGGLING: If they push back, acknowledge and say you'll try harder
    Example: "Okay okay, let me see what I can do..."
 
-4. FINAL OFFER: When GIVE_FINAL_COUPON is true, present the coupon enthusiastically:
-   - Use the exact COUPON_CODE and DISCOUNT_AMOUNT provided
+4. FINAL OFFER: ONLY when GIVE_FINAL_COUPON is explicitly set to true, present the coupon:
+   - Use the EXACT COUPON_CODE and DISCOUNT_AMOUNT from the context — do NOT change them
    - Create urgency about 5-minute expiry
-   Example: "Alright FINAL offer 🤝 Use code [COUPON_CODE] for ₹[DISCOUNT_AMOUNT] off. Valid for 5 minutes only! Jaldi karo!"
+   - The coupon will appear as a clickable button below the chat — just mention the discount
+   Example: "Alright FINAL offer 🤝 ₹[DISCOUNT_AMOUNT] off! The code is ready below — use it before it expires in 5 mins! Jaldi karo!"
 
 5. CLOSING: After giving coupon, wish them well
    Example: "Done! 🙌 You're a pro bargainer! That code expires in 5 mins so hurry!"
 
-CRITICAL RULES:
-- Use EXACTLY the COUPON_CODE and DISCOUNT_AMOUNT provided in context
-- NEVER make up your own discount amounts or coupon codes
+CRITICAL RULES — MUST FOLLOW:
+- ABSOLUTELY NEVER invent, fabricate, or mention ANY coupon code unless GIVE_FINAL_COUPON is true
+- If GIVE_FINAL_COUPON is false or not present, you have NO coupon code to give. Do not make one up.
+- When GIVE_FINAL_COUPON is true, use EXACTLY the COUPON_CODE and DISCOUNT_AMOUNT from the context
+- If the user asks for the code before the final round, say something like "Abhi nahi yaar, thoda aur convince karo!" or "Let me check with my manager..." — but NEVER give a code
 - NEVER reveal the maximum discount limit
 - Keep responses short (2-3 sentences max)
-- Use emojis sparingly 👋🤝🔥`;
+- Use emojis sparingly 👋🤝🔥
+- Only discuss discount amounts, never say a code string (like BRG-XXXX) unless GIVE_FINAL_COUPON is true`;
 
 export async function POST(req: Request) {
   try {
@@ -166,13 +170,14 @@ export async function POST(req: Request) {
     }
     
     // Calculate max discount based on rules AND per-product limits
-    const { maxDiscount, discountType } = calculateMaxDiscount(cartTotal, isFirstTimeUser, productMaxDiscounts);
+    const { maxDiscount } = calculateMaxDiscount(cartTotal, isFirstTimeUser, productMaxDiscounts);
     
     // Calculate current offer based on negotiation round
     const currentOffer = calculateOfferAmount(negotiationRound, maxDiscount);
     
     // Determine if this should be the final offer (after 2+ rounds of user pushing back)
-    const shouldGiveFinalCoupon = negotiationRound >= 3;
+    // Only authenticated users can receive a persisted coupon code.
+    const shouldGiveFinalCoupon = negotiationRound >= 3 && Boolean(userId);
     
     // Generate coupon code (we'll save it if final offer is given)
     const couponCode = generateCouponCode();
@@ -183,26 +188,32 @@ export async function POST(req: Request) {
       `- ${item.name} x${item.quantity} @ ₹${item.price}`
     ).join("\n");
 
-    const contextMessage = `
+    const contextMessage = shouldGiveFinalCoupon
+      ? `
 CURRENT CART:
 ${cartItemsList}
 Cart Total: ₹${cartTotal}
 
-USER INFO:
-- First-time customer: ${isFirstTimeUser ? "Yes" : "No"}
-- Discount type: ${discountType}
+NEGOTIATION STATE:
+- Round: ${negotiationRound}
+- GIVE_FINAL_COUPON: true
+- COUPON_CODE: ${couponCode}
+- DISCOUNT_AMOUNT: ₹${finalDiscountAmount}
+
+IMPORTANT: This is the FINAL round. Present the coupon code ${couponCode} for ₹${finalDiscountAmount} off enthusiastically. The code button will appear in the UI below your message. Mention the 5-minute expiry.
+`
+      : `
+CURRENT CART:
+${cartItemsList}
+Cart Total: ₹${cartTotal}
 
 NEGOTIATION STATE:
 - Round: ${negotiationRound}
 - CURRENT_OFFER: ₹${currentOffer}
-- GIVE_FINAL_COUPON: ${shouldGiveFinalCoupon}
-${shouldGiveFinalCoupon ? `- COUPON_CODE: ${couponCode}
-- DISCOUNT_AMOUNT: ₹${finalDiscountAmount}` : ""}
+- GIVE_FINAL_COUPON: false
 
-${shouldGiveFinalCoupon 
-  ? `IMPORTANT: This is the final round. Give them the coupon code ${couponCode} for ₹${finalDiscountAmount} off. Present it enthusiastically!`
-  : `Offer ₹${currentOffer} off. If they seem satisfied, you can bump it slightly. Don't give the final coupon yet.`
-}`;
+IMPORTANT: You are still negotiating. Offer ₹${currentOffer} off. NO coupon code has been generated yet. DO NOT mention any coupon code, DO NOT invent any code. If user pushes for a code, tell them to keep negotiating. If they are not logged in, ask them to sign in to unlock final coupon generation.
+`;
 
     // If giving final coupon, save to database BEFORE streaming
     let couponSaved = false;
