@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     if (body.couponCode) {
       const session = await getServerSession();
       const couponResult = await validateCoupon(body.couponCode, subtotal, session?.user?.id);
-      if (couponResult.valid) {
+      if (couponResult.valid && couponResult.discount !== undefined) {
         discount = couponResult.discount;
       }
     }
