@@ -1,16 +1,23 @@
 import type { Metadata } from "next"
 import { ShopClient } from "@/components/features/shop-client"
 import { Suspense } from "react"
+import {
+    JsonLd,
+    breadcrumbJsonLd,
+    collectionJsonLd,
+} from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Shop",
-    description: "Explore the full XILAR streetwear collection. Premium basics, bold fits, and everyday essentials.",
+    title: "Shop All Streetwear",
+    description:
+        "Explore the full XILAR streetwear collection. Premium basics, bold fits, oversized tees, cargos, joggers, and everyday essentials. Free shipping above ₹1,499.",
     alternates: {
         canonical: "/shop",
     },
     openGraph: {
-        title: "Shop | XILAR",
-        description: "Explore the full XILAR streetwear collection. Premium basics, bold fits, and everyday essentials.",
+        title: "Shop All Streetwear | XILAR",
+        description:
+            "Explore the full XILAR streetwear collection. Premium basics, bold fits, oversized tees, cargos, joggers, and everyday essentials.",
         url: "/shop",
     },
 }
@@ -22,30 +29,22 @@ export default function ShopPage({
 }) {
     const search = searchParams?.search || ""
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-    const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: [
-            {
-                "@type": "ListItem",
-                position: 1,
-                name: "Home",
-                item: `${baseUrl}/`,
-            },
-            {
-                "@type": "ListItem",
-                position: 2,
-                name: "Shop",
-                item: `${baseUrl}/shop`,
-            },
-        ],
-    }
 
     return (
         <Suspense fallback={<div className="p-6">Loading...</div>}>
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Shop", url: "/shop" },
+                ])}
+            />
+            <JsonLd
+                data={collectionJsonLd(baseUrl, {
+                    name: "All Products — XILAR",
+                    description:
+                        "Explore the full XILAR streetwear collection. Premium basics, bold fits, and everyday essentials.",
+                    url: "/shop",
+                })}
             />
             <ShopClient
                 genderFilter="all"

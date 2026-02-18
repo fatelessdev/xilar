@@ -1,23 +1,35 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, RefreshCw, Clock, Tag, AlertCircle } from "lucide-react"
+import { JsonLd, breadcrumbJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Exchange Policy",
-    description: "XILAR exchange policy for size or color issues within 48 hours of delivery.",
+    title: "Exchange Policy — Size & Color Exchanges Within 48 Hours",
+    description:
+        "XILAR exchange policy: exchanges accepted within 48 hours of delivery for size or color issues only. Product must be unused with tags intact.",
     alternates: {
         canonical: "/policies/exchange",
     },
     openGraph: {
         title: "Exchange Policy | XILAR",
-        description: "XILAR exchange policy for size or color issues within 48 hours of delivery.",
+        description:
+            "Exchanges accepted within 48 hours of delivery for size or color issues only. Product must be unused with tags intact.",
         url: "/policies/exchange",
     },
 }
 
 export default function ExchangePolicyPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     return (
         <div className="min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Store Policies", url: "/policies" },
+                    { name: "Exchange Policy", url: "/policies/exchange" },
+                ])}
+            />
             <div className="px-6 py-12 border-b border-border">
                 <Link href="/policies" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
                     <ArrowLeft className="h-4 w-4" /> Back to Policies

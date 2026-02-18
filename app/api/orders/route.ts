@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const shippingCost = subtotal >= 1499 ? 0 : 49;
+    const shippingCost = subtotal >= 1499 ? 0 : 99;
     const codFee = body.paymentMethod === "cod" ? 50 : 0;
 
     // Validate coupon using canonical rules

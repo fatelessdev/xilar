@@ -1,23 +1,35 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, CreditCard, Gift, Calendar, Info } from "lucide-react"
+import { JsonLd, breadcrumbJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Refund Policy",
-    description: "XILAR refund policy: store credit with a 5% bonus for approved returns.",
+    title: "Refund Policy — Store Credit with 5% Bonus",
+    description:
+        "XILAR refund policy: all refunds issued as store credit with a 5% bonus. Valid 30–60 days. No cash refunds.",
     alternates: {
         canonical: "/policies/refunds",
     },
     openGraph: {
         title: "Refund Policy | XILAR",
-        description: "XILAR refund policy: store credit with a 5% bonus for approved returns.",
+        description:
+            "All refunds issued as store credit with a 5% bonus. Valid 30–60 days. No cash refunds.",
         url: "/policies/refunds",
     },
 }
 
 export default function RefundPolicyPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     return (
         <div className="min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Store Policies", url: "/policies" },
+                    { name: "Refund Policy", url: "/policies/refunds" },
+                ])}
+            />
             <div className="px-6 py-12 border-b border-border">
                 <Link href="/policies" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
                     <ArrowLeft className="h-4 w-4" /> Back to Policies

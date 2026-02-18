@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       subtotal += parseFloat(product.sellingPrice) * item.quantity;
     }
 
-    const shipping = subtotal >= 1499 ? 0 : 49;
+    const shipping = subtotal >= 1499 ? 0 : 99;
 
     // Validate coupon using canonical rules (expiry, usage limits, min order, etc.)
     let discount = 0;

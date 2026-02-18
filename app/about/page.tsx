@@ -1,22 +1,33 @@
 import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
+import { JsonLd, breadcrumbJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "About",
-    description: "Learn about XILAR — Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury.",
+    title: "About XILAR — Our Story",
+    description:
+        "Learn about XILAR — Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury. Founded in Lucknow by Aman Singh.",
     alternates: {
         canonical: "/about",
     },
     openGraph: {
-        title: "About XILAR",
-        description: "Learn about XILAR — Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury.",
+        title: "About XILAR — Our Story",
+        description:
+            "Gen-Z streetwear built on streetwise minimalism, bold design, and affordable luxury. Founded in Lucknow.",
         url: "/about",
     },
 }
 
 export default function AboutPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     return (
         <div className="flex flex-col min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "About", url: "/about" },
+                ])}
+            />
             <div className="px-6 py-16 md:py-24 max-w-4xl">
                 <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-8">About XILAR</h1>
 

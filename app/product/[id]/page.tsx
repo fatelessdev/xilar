@@ -3,6 +3,11 @@ import { ProductClient } from "@/components/features/product-client"
 import { db } from "@/lib/db"
 import { products } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
+import {
+    JsonLd,
+    productJsonLd,
+    breadcrumbJsonLd,
+} from "@/components/seo/structured-data"
 
 async function getProduct(id: string) {
     const [product] = await db
@@ -31,21 +36,28 @@ export async function generateMetadata(
     }
 
     const price = parseFloat(product.sellingPrice)
-    const title = `${product.name}`
-    const description = product.description || `Shop ${product.name} from XILAR.`
+    const mrp = parseFloat(product.mrp)
+    const description = product.description || `Shop ${product.name} — premium streetwear from XILAR. Starting at ₹${price.toLocaleString("en-IN")}.`
 
     return {
-        title,
+        title: product.name,
         description,
         alternates: {
             canonical: `/product/${product.id}`,
         },
         openGraph: {
-            title: `${product.name} | XILAR`,
+            title: `${product.name} — ₹${price.toLocaleString("en-IN")} | XILAR`,
             description,
             url: `/product/${product.id}`,
             type: "website",
-            images: product.images?.length ? product.images : ["/logo.png"],
+            images: product.images?.length
+                ? product.images.map((img) => ({
+                    url: img,
+                    width: 800,
+                    height: 800,
+                    alt: product.name,
+                }))
+                : [{ url: "/logo.png", width: 1200, height: 630, alt: "XILAR" }],
         },
         twitter: {
             card: "summary_large_image",
@@ -56,6 +68,11 @@ export async function generateMetadata(
         other: {
             "product:price:amount": price.toString(),
             "product:price:currency": "INR",
+            ...(mrp > price && {
+                "product:original_price:amount": mrp.toString(),
+                "product:original_price:currency": "INR",
+            }),
+            "product:availability": product.stock > 0 ? "in stock" : "out of stock",
         },
     }
 }
@@ -69,32 +86,32 @@ export default async function ProductPage({
     const product = await getProduct(id)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
-    const jsonLd = product ? {
-        "@context": "https://schema.org",
-        "@type": "Product",
-        name: product.name,
-        description: product.description || undefined,
-        image: product.images?.length ? product.images : undefined,
-        brand: {
-            "@type": "Brand",
-            name: "XILAR",
-        },
-        offers: {
-            "@type": "Offer",
-            priceCurrency: "INR",
-            price: product.sellingPrice,
-            availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-            url: `${baseUrl}/product/${product.id}`,
-        },
-    } : null
-
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
+            {product && (
+                <>
+                    <JsonLd
+                        data={productJsonLd(baseUrl, {
+                            name: product.name,
+                            description: product.description,
+                            images: product.images,
+                            sellingPrice: product.sellingPrice,
+                            mrp: product.mrp,
+                            stock: product.stock,
+                            id: product.id,
+                            category: product.category,
+                            sizes: product.sizes,
+                            colors: product.colors,
+                        })}
+                    />
+                    <JsonLd
+                        data={breadcrumbJsonLd(baseUrl, [
+                            { name: "Home", url: "/" },
+                            { name: "Shop", url: "/shop" },
+                            { name: product.name, url: `/product/${product.id}` },
+                        ])}
+                    />
+                </>
             )}
             <ProductClient id={id} />
         </>

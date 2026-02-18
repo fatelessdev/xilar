@@ -1,23 +1,35 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, FileText, Video, XCircle, AlertTriangle } from "lucide-react"
+import { JsonLd, breadcrumbJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Return Policy",
-    description: "XILAR return policy for defective or damaged items only. Unboxing video required.",
+    title: "Return Policy — Defective Items Only",
+    description:
+        "XILAR return policy: returns accepted only for defective or damaged items. Unboxing video required as proof of damage.",
     alternates: {
         canonical: "/policies/returns",
     },
     openGraph: {
         title: "Return Policy | XILAR",
-        description: "XILAR return policy for defective or damaged items only. Unboxing video required.",
+        description:
+            "Returns accepted only for defective or damaged items. Unboxing video required as proof of damage.",
         url: "/policies/returns",
     },
 }
 
 export default function ReturnPolicyPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     return (
         <div className="min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Store Policies", url: "/policies" },
+                    { name: "Return Policy", url: "/policies/returns" },
+                ])}
+            />
             <div className="px-6 py-12 border-b border-border">
                 <Link href="/policies" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
                     <ArrowLeft className="h-4 w-4" /> Back to Policies

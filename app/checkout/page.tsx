@@ -292,8 +292,8 @@ export default function CheckoutPage() {
         )
     }
 
-    // Calculate pricing: free shipping above ₹1499, otherwise ₹49
-    const shippingCost = totalPrice >= 1499 ? 0 : 49
+    // Calculate pricing: free shipping above ₹1499, otherwise ₹99
+    const shippingCost = totalPrice >= 1499 ? 0 : 99
     const codFee = paymentMethod === "cod" ? 50 : 0
     const discount = appliedCoupon?.discount || 0
     const finalTotal = totalPrice + shippingCost + codFee - discount
