@@ -1,19 +1,42 @@
 import type { Metadata } from "next"
 import { ShopClient } from "@/components/features/shop-client"
+import { JsonLd, breadcrumbJsonLd, collectionJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Men",
-    description: "Shop men’s streetwear essentials from XILAR. Elevated fits, bold silhouettes, everyday comfort.",
+    title: "Men's Streetwear",
+    description:
+        "Shop men's streetwear essentials from XILAR. Oversized tees, cargo pants, joggers, hoodies — elevated fits and bold silhouettes. Free shipping above ₹1,499.",
     alternates: {
         canonical: "/shop/men",
     },
     openGraph: {
-        title: "Men | XILAR",
-        description: "Shop men’s streetwear essentials from XILAR. Elevated fits, bold silhouettes, everyday comfort.",
+        title: "Men's Streetwear | XILAR",
+        description:
+            "Shop men's streetwear essentials from XILAR. Oversized tees, cargo pants, joggers, hoodies — elevated fits and bold silhouettes.",
         url: "/shop/men",
     },
 }
 
 export default function ShopMenPage() {
-    return <ShopClient genderFilter="men" title="Men" subtitle="Streetwear essentials for him" />
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
+    return (
+        <>
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Shop", url: "/shop" },
+                    { name: "Men", url: "/shop/men" },
+                ])}
+            />
+            <JsonLd
+                data={collectionJsonLd(baseUrl, {
+                    name: "Men's Streetwear — XILAR",
+                    description: "Streetwear essentials for him. Elevated fits, bold silhouettes.",
+                    url: "/shop/men",
+                })}
+            />
+            <ShopClient genderFilter="men" title="Men" subtitle="Streetwear essentials for him" />
+        </>
+    )
 }

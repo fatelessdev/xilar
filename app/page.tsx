@@ -1,50 +1,37 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/features/hero";
 import { ProductGrid } from "@/components/features/product-grid";
+import {
+  JsonLd,
+  organizationJsonLd,
+  webSiteJsonLd,
+} from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
-  title: "Home",
-  description: "Shop next-gen streetwear essentials, premium basics, and bold drops from XILAR.",
+  title: "Home | Premium Streetwear for Gen-Z",
+  description:
+    "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹1,499.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "XILAR | The Future Wear",
-    description: "Shop next-gen streetwear essentials, premium basics, and bold drops from XILAR.",
+    title: "XILAR | The Future Wear — Premium Streetwear India",
+    description:
+      "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹1,499.",
     url: "/",
   },
 };
 
 export default function Home() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        name: "XILAR",
-        url: baseUrl,
-        logo: `${baseUrl}/logo.png`,
-        sameAs: [],
-      },
-      {
-        "@type": "WebSite",
-        name: "XILAR",
-        url: baseUrl,
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${baseUrl}/shop?search={search_term_string}`,
-          "query-input": "required name=search_term_string",
-        },
-      },
-    ],
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [organizationJsonLd(baseUrl), webSiteJsonLd(baseUrl)],
+        }}
       />
       <Hero />
       <ProductGrid title="Best Sellers" />

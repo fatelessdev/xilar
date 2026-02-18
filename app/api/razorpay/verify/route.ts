@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const serverShipping = serverSubtotal >= 1499 ? 0 : 49;
+    const serverShipping = serverSubtotal >= 1499 ? 0 : 99;
 
     // Validate coupon using canonical rules (expiry, usage limits, min order, etc.)
     let serverDiscount = 0;

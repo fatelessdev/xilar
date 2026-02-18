@@ -13,51 +13,90 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
-    default: "XILAR | The Future Wear",
+    default: "XILAR | The Future Wear — Premium Streetwear India",
     template: "%s | XILAR",
   },
-  description: "Next-gen streetwear for the bold. Elevate your everyday with XILAR.",
+  description:
+    "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹1,499.",
   applicationName: "XILAR",
   keywords: [
     "XILAR",
+    "xilar.in",
     "streetwear",
     "unisex fashion",
     "Gen-Z clothing",
     "premium basics",
     "urban wear",
     "India streetwear",
+    "oversized tshirts",
+    "cargo pants India",
+    "streetwear brand India",
+    "affordable streetwear",
+    "joggers",
+    "hoodies India",
+    "online clothing store India",
   ],
+  authors: [{ name: "XILAR", url: "https://xilar.in" }],
+  creator: "XILAR",
+  publisher: "XILAR",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
+    locale: "en_IN",
     siteName: "XILAR",
-    title: "XILAR | The Future Wear",
-    description: "Next-gen streetwear for the bold. Elevate your everyday with XILAR.",
+    title: "XILAR | The Future Wear — Premium Streetwear India",
+    description:
+      "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹1,499.",
     url: "/",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "XILAR",
+        alt: "XILAR — The Future Wear | Premium Streetwear India",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "XILAR | The Future Wear",
-    description: "Next-gen streetwear for the bold. Elevate your everyday with XILAR.",
+    description:
+      "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials.",
     images: ["/logo.png"],
   },
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/logo.png" },
+      { url: "/logo.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "E-Commerce",
+  generator: "Next.js",
+  referrer: "origin-when-cross-origin",
+  other: {
+    "msapplication-TileColor": "#000000",
   },
 };
 

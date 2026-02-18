@@ -49,7 +49,7 @@ Stored in `localStorage` (keys: `xilar-cart`, `xilar-wishlist`, `xilar-theme`). 
 - Server always recalculates totals from DB prices — never trust client amounts
 - Razorpay signature verification on payment confirmation (`app/api/razorpay/verify/route.ts`)
 - Coupon validation runs server-side with all business rules (expiry, limits, min order, user restrictions)
-- Shipping: free ≥ ₹1,499, else ₹49
+- Shipping: free ≥ ₹1,499, else ₹99
 
 ### Bargain AI (Discount Negotiation)
 - Checkout component (`components/features/checkout-bargain.tsx`) streams AI chat via `/api/bargain`

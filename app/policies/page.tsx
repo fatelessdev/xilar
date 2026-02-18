@@ -1,21 +1,26 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { FileText, RefreshCw, Truck, CreditCard } from "lucide-react"
+import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Store Policies",
-    description: "Read XILAR policies on exchanges, returns, refunds, and shipping.",
+    title: "Store Policies — Exchange, Returns, Refunds & Shipping",
+    description:
+        "Read XILAR policies on exchanges (48hr window), returns (defects only), refunds (store credit + 5% bonus), and shipping (free above ₹1,499).",
     alternates: {
         canonical: "/policies",
     },
     openGraph: {
         title: "Store Policies | XILAR",
-        description: "Read XILAR policies on exchanges, returns, refunds, and shipping.",
+        description:
+            "Read XILAR policies on exchanges, returns, refunds, and shipping. Free shipping above ₹1,499.",
         url: "/policies",
     },
 }
 
 export default function PoliciesPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     const policies = [
         {
             title: "Exchange Policy",
@@ -45,6 +50,32 @@ export default function PoliciesPage() {
 
     return (
         <div className="min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Store Policies", url: "/policies" },
+                ])}
+            />
+            <JsonLd
+                data={faqJsonLd([
+                    {
+                        question: "What is XILAR's exchange policy?",
+                        answer: "Exchanges are accepted within 48 hours of delivery for size or color issues only. Product must be unused with tags intact.",
+                    },
+                    {
+                        question: "Does XILAR accept returns?",
+                        answer: "Returns are accepted only for defective or damaged products. An unboxing video is required as proof.",
+                    },
+                    {
+                        question: "How does XILAR handle refunds?",
+                        answer: "All refunds are issued as store credit (not cash) with a 5% bonus on top of the refund amount. Store credits are valid for 30-60 days.",
+                    },
+                    {
+                        question: "What are XILAR's shipping charges?",
+                        answer: "Free shipping on orders above ₹1,499. Standard delivery is ₹99. Cash on Delivery is available with an additional ₹50 fee.",
+                    },
+                ])}
+            />
             <div className="px-6 py-12 border-b border-border">
                 <h1 className="text-4xl font-black tracking-tighter uppercase">Store Policies</h1>
                 <p className="text-muted-foreground mt-2">
@@ -95,7 +126,7 @@ export default function PoliciesPage() {
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-gold">•</span>
-                            <span><strong>Shipping:</strong> Free above ₹1,499, otherwise ₹49. COD available (+₹50 fee).</span>
+                            <span><strong>Shipping:</strong> Free above ₹1,499, otherwise ₹99. COD available (+₹50 fee).</span>
                         </li>
                     </ul>
                 </div>

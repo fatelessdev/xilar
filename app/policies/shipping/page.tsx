@@ -1,23 +1,35 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, Truck, Clock, MapPin, IndianRupee, Package } from "lucide-react"
+import { JsonLd, breadcrumbJsonLd } from "@/components/seo/structured-data"
 
 export const metadata: Metadata = {
-    title: "Shipping Policy",
-    description: "XILAR shipping policy: free shipping above ₹1,499, standard delivery ₹49, COD +₹50.",
+    title: "Shipping Policy — Free Delivery Above ₹1,499",
+    description:
+        "XILAR shipping policy: free shipping above ₹1,499, standard delivery ₹99, COD available with ₹50 fee. 5–7 business day delivery across India.",
     alternates: {
         canonical: "/policies/shipping",
     },
     openGraph: {
         title: "Shipping Policy | XILAR",
-        description: "XILAR shipping policy: free shipping above ₹1,499, standard delivery ₹49, COD +₹50.",
+        description:
+            "Free shipping above ₹1,499, standard delivery ₹99, COD available with ₹50 fee. 5–7 business day delivery.",
         url: "/policies/shipping",
     },
 }
 
 export default function ShippingPolicyPage() {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+
     return (
         <div className="min-h-screen">
+            <JsonLd
+                data={breadcrumbJsonLd(baseUrl, [
+                    { name: "Home", url: "/" },
+                    { name: "Store Policies", url: "/policies" },
+                    { name: "Shipping Policy", url: "/policies/shipping" },
+                ])}
+            />
             <div className="px-6 py-12 border-b border-border">
                 <Link href="/policies" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
                     <ArrowLeft className="h-4 w-4" /> Back to Policies
@@ -52,7 +64,7 @@ export default function ShippingPolicyPage() {
                                 <p className="font-medium">Orders below ₹1,499</p>
                                 <p className="text-sm text-muted-foreground">Standard delivery fee applies</p>
                             </div>
-                            <div className="text-2xl font-bold">₹49</div>
+                            <div className="text-2xl font-bold">₹99</div>
                         </div>
                     </div>
                 </section>
@@ -154,7 +166,7 @@ export default function ShippingPolicyPage() {
                                 </tr>
                                 <tr className="border-t border-border">
                                     <td className="p-3">Below ₹1,499</td>
-                                    <td className="p-3 text-right">₹49</td>
+                                    <td className="p-3 text-right">₹99</td>
                                 </tr>
                                 <tr className="border-t border-border bg-orange-500/5">
                                     <td className="p-3">COD Extra Fee</td>
