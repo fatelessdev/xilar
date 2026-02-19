@@ -42,8 +42,11 @@ export const metadata: Metadata = {
     "hoodies India",
     "online clothing store India",
   ],
-  authors: [{ name: "XILAR", url: "https://xilar.in" }],
-  creator: "XILAR",
+  authors: [
+    { name: "XILAR", url: "https://xilar.in" }, 
+    { name: "Aditya (fate1ess)", url: "https://fateless.dev" }
+  ],
+  creator: "Aditya Singh (fatelessdev)",
   publisher: "XILAR",
   alternates: {
     canonical: "/",
