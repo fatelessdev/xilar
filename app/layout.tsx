@@ -7,7 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { CartDrawer } from "@/components/features/cart-drawer";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
-import { ThemeProvider } from "@/lib/theme-context";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,7 +17,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
   title: {
     default: "XILAR | The Future Wear — Premium Streetwear India",
     template: "%s | XILAR",
@@ -43,8 +45,8 @@ export const metadata: Metadata = {
     "online clothing store India",
   ],
   authors: [
-    { name: "XILAR", url: "https://xilar.in" }, 
-    { name: "Aditya (fate1ess)", url: "https://fateless.dev" }
+    { name: "XILAR", url: "https://xilar.in" },
+    { name: "Aditya (fate1ess)", url: "https://fateless.dev" },
   ],
   creator: "Aditya Singh (fatelessdev)",
   publisher: "XILAR",
@@ -113,7 +115,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground tracking-tight min-h-screen flex flex-col`}
       >
-        <ThemeProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <CartProvider>
             <WishlistProvider>
               <Navbar />
