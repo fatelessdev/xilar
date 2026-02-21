@@ -10,7 +10,7 @@ export function Hero() {
   const [videoEnded, setVideoEnded] = useState(false);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden flex items-center justify-center">
+    <section className="relative h-[calc(100svh-8.5rem)] md:h-[calc(100svh-4rem)] w-full overflow-hidden flex items-center justify-center">
       {/* Background Image / Video */}
       <div className="absolute inset-0 bg-neutral-900 z-0 select-none">
         {!videoEnded && (
