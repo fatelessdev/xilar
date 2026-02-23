@@ -19,6 +19,7 @@ export function Hero() {
             autoPlay
             muted
             playsInline
+            preload="metadata"
             className="absolute inset-0 w-full h-full object-cover z-20"
             onEnded={() => setVideoEnded(true)}
           />
