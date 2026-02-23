@@ -154,7 +154,7 @@ export const createAnimation = (
       name: `${variant}-${start}`,
       css: `
       ::view-transition-group(root) {
-  animation-timing-function: var(--expo-in);
+  animation-timing-function: cubic-bezier(0.95, 0.05, 0.795, 0.035);
 }
 
 ::view-transition-new(root) {
