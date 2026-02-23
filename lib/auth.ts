@@ -10,9 +10,16 @@ const authBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL ||
   "http://localhost:3000";
 
+const envAuthSecret = process.env.BETTER_AUTH_SECRET;
+
+if (!envAuthSecret && process.env.NODE_ENV === "production") {
+  throw new Error(
+    "BETTER_AUTH_SECRET must be set in production. Please define it in your environment configuration."
+  );
+}
+
 const authSecret =
-  process.env.BETTER_AUTH_SECRET ||
-  "xilar-local-dev-secret-change-in-production";
+  envAuthSecret || "xilar-local-dev-secret-change-in-production";
 
 export const auth = betterAuth({
   baseURL: authBaseUrl,
