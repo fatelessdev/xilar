@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -46,9 +47,11 @@ export function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="mr-6 flex items-center">
-            <img
+            <Image
               src="/logo.png"
               alt="XILAR"
+              width={160}
+              height={40}
               className="h-8 md:h-10 w-auto object-contain dark:invert"
             />
           </Link>
@@ -177,7 +180,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-border py-4 px-4 space-y-1 bg-background absolute top-14 left-0 w-full shadow-lg z-50 animate-in slide-in-from-top-2">
+          <div className="md:hidden border-t border-border py-4 px-4 space-y-1 bg-background absolute top-full left-0 w-full shadow-lg z-50 animate-in slide-in-from-top-2">
             <Link
               href="/shop"
               className="block py-3 text-sm font-medium tracking-wider uppercase border-b border-border"
