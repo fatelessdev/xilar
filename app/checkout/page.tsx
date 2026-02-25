@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { Check, CreditCard, Truck, MapPin, Loader2, AlertCircle } from "lucide-react"
 import { CheckoutBargain } from "@/components/features/checkout-bargain"
 import { useSession } from "@/lib/auth-client"
+import { getSavedShippingAddress } from "@/lib/actions/orders"
 import Script from "next/script"
 
 const CHECKOUT_STORAGE_KEY = "xilar-checkout"
@@ -66,7 +67,7 @@ export default function CheckoutPage() {
         pincode: ""
     })
 
-    // Restore checkout state from sessionStorage on mount
+    // Restore checkout state from sessionStorage on mount, then fill gaps from DB
     useEffect(() => {
         const saved = loadCheckoutState()
         if (saved) {
@@ -75,6 +76,25 @@ export default function CheckoutPage() {
             if (saved.paymentMethod) setPaymentMethod(saved.paymentMethod)
             if (saved.appliedCoupon) setAppliedCoupon(saved.appliedCoupon)
         }
+
+        // Fetch saved address from DB and fill any empty fields
+        getSavedShippingAddress()
+            .then((dbAddr) => {
+                if (!dbAddr) return
+                setShippingAddress((prev) => ({
+                    name: prev.name || dbAddr.name || "",
+                    email: prev.email || dbAddr.email || "",
+                    phone: prev.phone || dbAddr.phone || "",
+                    address: prev.address || dbAddr.address || "",
+                    city: prev.city || dbAddr.city || "",
+                    state: prev.state || dbAddr.state || "",
+                    pincode: prev.pincode || dbAddr.pincode || "",
+                }))
+            })
+            .catch(() => {
+                // Ignore prefill failures; user can still fill manually
+            })
+
         setHydrated(true)
     }, [])
 

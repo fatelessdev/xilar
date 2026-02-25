@@ -252,13 +252,20 @@ export async function createOrder(input: CreateOrderInput) {
       .where(eq(bargainSessions.couponCode, input.couponCode));
   }
 
-  // Update user order stats if logged in
+  // Update user order stats + save shipping address for next checkout
   if (userId) {
     await db
       .update(user)
       .set({
         ordersCount: sql`${user.ordersCount} + 1`,
         totalSpent: sql`${user.totalSpent} + ${input.total}`,
+        shippingAddress: {
+          phone: input.shippingAddress.phone,
+          address: input.shippingAddress.address,
+          city: input.shippingAddress.city,
+          state: input.shippingAddress.state || "",
+          pincode: input.shippingAddress.pincode,
+        },
         updatedAt: new Date(),
       })
       .where(eq(user.id, userId));
@@ -302,6 +309,162 @@ export async function getUserOrders() {
   );
 
   return ordersWithItems;
+}
+
+// ============================================
+// CANCEL ORDER (COD only, pending/confirmed)
+// ============================================
+
+export async function cancelOrder(orderId: string) {
+  const session = await getServerSession();
+  if (!session?.user?.id) {
+    return { success: false, error: "Authentication required" };
+  }
+
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.id, orderId));
+
+  if (!order) {
+    return { success: false, error: "Order not found" };
+  }
+
+  if (order.userId !== session.user.id) {
+    return { success: false, error: "You can only cancel your own orders" };
+  }
+
+  if (order.paymentMethod !== "cod") {
+    return { success: false, error: "Only COD orders can be cancelled online. For paid orders, please contact support." };
+  }
+
+  if (!["pending", "confirmed"].includes(order.status)) {
+    return { success: false, error: `Cannot cancel an order that is already ${order.status}` };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      // Mark order as cancelled only if still eligible (prevents race-condition double cancel)
+      const cancelledOrder = await tx
+        .update(orders)
+        .set({ status: "cancelled", updatedAt: new Date() })
+        .where(
+          and(
+            eq(orders.id, orderId),
+            eq(orders.userId, session.user.id),
+            eq(orders.paymentMethod, "cod"),
+            sql`${orders.status} IN ('pending', 'confirmed')`
+          )
+        )
+        .returning({ id: orders.id });
+
+      if (cancelledOrder.length === 0) {
+        throw new Error("Order is no longer cancellable");
+      }
+
+      // Fetch order items for stock restoration
+      const items = await tx
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, orderId));
+
+      // Restore stock for each item
+      for (const item of items) {
+        if (!item.productId) continue;
+
+        const [variantCountRow] = await tx
+          .select({ count: sql<number>`count(*)` })
+          .from(productVariants)
+          .where(eq(productVariants.productId, item.productId));
+        const hasVariants = Number(variantCountRow?.count ?? 0) > 0;
+
+        if (hasVariants) {
+          const colorCondition = item.color
+            ? eq(productVariants.color, item.color)
+            : isNull(productVariants.color);
+
+          await tx
+            .update(productVariants)
+            .set({
+              stock: sql`${productVariants.stock} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(productVariants.productId, item.productId),
+                eq(productVariants.size, item.size),
+                colorCondition
+              )
+            );
+
+          // Recalculate product-level stock from variants
+          const [stockRow] = await tx
+            .select({ totalStock: sql<number>`COALESCE(SUM(${productVariants.stock}), 0)` })
+            .from(productVariants)
+            .where(eq(productVariants.productId, item.productId));
+
+          await tx
+            .update(products)
+            .set({
+              stock: Number(stockRow?.totalStock ?? 0),
+              updatedAt: new Date(),
+            })
+            .where(eq(products.id, item.productId));
+        } else {
+          await tx
+            .update(products)
+            .set({
+              stock: sql`${products.stock} + ${item.quantity}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(products.id, item.productId));
+        }
+      }
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to cancel order";
+    if (message.toLowerCase().includes("no longer cancellable")) {
+      return { success: false, error: "This order is no longer cancellable." };
+    }
+    console.error("Cancel order failed:", error);
+    return { success: false, error: "Failed to cancel order" };
+  }
+
+  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
+
+  return { success: true };
+}
+
+// ============================================
+// SHIPPING ADDRESS (saved on user profile)
+// ============================================
+
+export async function getSavedShippingAddress() {
+  const session = await getServerSession();
+  if (!session?.user?.id) return null;
+
+  const [userData] = await db
+    .select({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      shippingAddress: user.shippingAddress,
+    })
+    .from(user)
+    .where(eq(user.id, session.user.id));
+
+  if (!userData) return null;
+
+  return {
+    name: userData.name,
+    email: userData.email,
+    phone: userData.phone || userData.shippingAddress?.phone || "",
+    address: userData.shippingAddress?.address || "",
+    city: userData.shippingAddress?.city || "",
+    state: userData.shippingAddress?.state || "",
+    pincode: userData.shippingAddress?.pincode || "",
+  };
 }
 
 export async function getOrderById(orderId: string) {
