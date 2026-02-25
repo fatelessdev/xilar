@@ -2,30 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Search, ShoppingBag, Heart, Menu, X, User } from "lucide-react";
+import { ShoppingBag, Heart, Menu, X, User, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
 export function Navbar() {
-  const router = useRouter();
   const { totalItems, setIsOpen } = useCart();
   const { items: wishlistItems } = useWishlist();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
-      setShowSearch(false);
-      setSearchQuery("");
-    }
-  };
 
   return (
     <>
@@ -98,46 +85,14 @@ export function Navbar() {
               variant="circle"
               start="top-right"
             />
-            {/* Search */}
-            {showSearch ? (
-              <form onSubmit={handleSearch} className="flex items-center">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                  className="h-9 w-28 md:w-48 px-3 bg-secondary/50 border border-input rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setShowSearch(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </form>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setShowSearch(true)}
-              >
-                <Search className="h-4 w-4" />
-                <span className="sr-only">Search</span>
+
+            {/* Orders */}
+            <Link href="/orders">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Package className="h-4 w-4" />
+                <span className="sr-only">Orders</span>
               </Button>
-            )}
+            </Link>
 
             {/* Account - Hidden on mobile */}
             <Link href="/account" className="hidden sm:block">
@@ -218,10 +173,17 @@ export function Navbar() {
             </Link>
             <Link
               href="/account"
-              className="block py-3 text-sm font-medium tracking-wider uppercase text-muted-foreground"
+              className="block py-3 text-sm font-medium tracking-wider uppercase text-muted-foreground border-b border-border"
               onClick={() => setShowMobileMenu(false)}
             >
               Account
+            </Link>
+            <Link
+              href="/orders"
+              className="block py-3 text-sm font-medium tracking-wider uppercase text-muted-foreground border-b border-border"
+              onClick={() => setShowMobileMenu(false)}
+            >
+              Orders
             </Link>
             <Link
               href="/about"
