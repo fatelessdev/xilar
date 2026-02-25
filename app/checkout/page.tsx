@@ -4,8 +4,10 @@ import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Check, CreditCard, Truck, MapPin, Loader2, AlertCircle } from "lucide-react"
 import { CheckoutBargain } from "@/components/features/checkout-bargain"
+import { useSession } from "@/lib/auth-client"
 import Script from "next/script"
 
 const CHECKOUT_STORAGE_KEY = "xilar-checkout"
@@ -41,6 +43,8 @@ function loadCheckoutState(): Partial<CheckoutState> | null {
 
 export default function CheckoutPage() {
     const { items, totalPrice, clearCart } = useCart()
+    const { data: session, isPending: isAuthPending } = useSession()
+    const router = useRouter()
     const [step, setStep] = useState(1)
     const [orderPlaced, setOrderPlaced] = useState(false)
     const [orderId, setOrderId] = useState<string | null>(null)
@@ -73,6 +77,13 @@ export default function CheckoutPage() {
         }
         setHydrated(true)
     }, [])
+
+    // Redirect to sign-in if not authenticated
+    useEffect(() => {
+        if (!isAuthPending && !session) {
+            router.replace("/account?redirect=/checkout")
+        }
+    }, [isAuthPending, session, router])
 
     // Persist checkout state to sessionStorage on changes
     const persistCheckout = useCallback(() => {
@@ -157,6 +168,7 @@ export default function CheckoutPage() {
                 productName: item.name,
                 productImage: item.image,
                 size: item.size,
+                color: item.color,
                 quantity: item.quantity,
                 unitPrice: item.price,
                 totalPrice: item.price * item.quantity
@@ -297,6 +309,15 @@ export default function CheckoutPage() {
     const codFee = paymentMethod === "cod" ? 50 : 0
     const discount = appliedCoupon?.discount || 0
     const finalTotal = totalPrice + shippingCost + codFee - discount
+
+    // Show loading while checking auth
+    if (isAuthPending || !session) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
 
     if (items.length === 0 && !orderPlaced) {
         return (

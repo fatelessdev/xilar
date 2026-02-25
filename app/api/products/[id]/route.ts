@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products } from "@/lib/db/schema";
+import { products, productVariants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isAdmin } from "@/lib/auth-server";
 
@@ -33,7 +33,13 @@ export async function GET(
       }
     }
 
-    return NextResponse.json(product);
+    // Fetch variants for this product
+    const variants = await db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.productId, id));
+
+    return NextResponse.json({ ...product, variants });
   } catch (error) {
     console.error("Failed to fetch product:", error);
     return NextResponse.json(

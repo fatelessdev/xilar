@@ -4,10 +4,13 @@ import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import { X, Minus, Plus, ShoppingBag } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { useSession } from "@/lib/auth-client"
 
 export function CartDrawer() {
     const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalItems, totalPrice, clearCart } = useCart()
+    const { data: session } = useSession()
+    const router = useRouter()
 
     if (!isOpen) return null
 
@@ -95,11 +98,28 @@ export function CartDrawer() {
                             <span>Total</span>
                             <span>₹{totalPrice.toLocaleString("en-IN")}</span>
                         </div>
-                        <Link href="/checkout" onClick={() => setIsOpen(false)}>
-                            <Button className="w-full h-14 rounded-none text-lg uppercase tracking-widest font-bold">
-                                Checkout
-                            </Button>
-                        </Link>
+                        {!session ? (
+                            <div className="space-y-2">
+                                <Button
+                                    className="w-full h-14 rounded-none text-lg uppercase tracking-widest font-bold"
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        router.push("/account?redirect=/checkout")
+                                    }}
+                                >
+                                    Sign In to Checkout
+                                </Button>
+                                <p className="text-xs text-center text-muted-foreground">
+                                    Sign in required to place an order
+                                </p>
+                            </div>
+                        ) : (
+                            <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                                <Button className="w-full h-14 rounded-none text-lg uppercase tracking-widest font-bold">
+                                    Checkout
+                                </Button>
+                            </Link>
+                        )}
                         <Button
                             variant="ghost"
                             className="w-full text-xs uppercase tracking-widest"

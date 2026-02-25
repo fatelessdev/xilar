@@ -50,6 +50,7 @@ interface ProductData {
   features: string[] | null;
   colors: { name: string; hex: string; images?: string[] }[] | null;
   tags: string[] | null;
+  variants?: { id: string; productId: string; size: string; color: string | null; stock: number }[];
 }
 
 export default function EditProductPage() {
@@ -91,6 +92,7 @@ export default function EditProductPage() {
   const [newColor, setNewColor] = useState({ name: "", hex: "#000000" });
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [variantStock, setVariantStock] = useState<Record<string, number>>({});
 
   // Fetch product data on mount
   useEffect(() => {
@@ -125,6 +127,16 @@ export default function EditProductPage() {
         setFeatures(product.features || []);
         setColors(product.colors || []);
         setTags(product.tags || []);
+
+        // Populate variant stock from fetched variants
+        if (product.variants && product.variants.length > 0) {
+          const stockMap: Record<string, number> = {};
+          for (const v of product.variants) {
+            const key = `${v.size}|${v.color || ""}`;
+            stockMap[key] = v.stock;
+          }
+          setVariantStock(stockMap);
+        }
       } catch {
         setError("Failed to load product");
       } finally {
@@ -184,14 +196,34 @@ export default function EditProductPage() {
     setError("");
 
     try {
+      // Build variants array from the stock matrix
+      const effectiveSizes = formData.category === "accessory" ? ["One Size"] : sizes;
+      const variants: { size: string; color: string | null; stock: number }[] = [];
+
+      for (const size of effectiveSizes) {
+        if (colors.length > 0) {
+          for (const color of colors) {
+            const key = `${size}|${color.name}`;
+            variants.push({ size, color: color.name, stock: variantStock[key] || 0 });
+          }
+        } else {
+          const key = `${size}|`;
+          variants.push({ size, color: null, stock: variantStock[key] || 0 });
+        }
+      }
+
+      const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+
       const productData: ProductInput = {
         ...formData,
+        stock: totalStock,
         images,
-        sizes,
+        sizes: effectiveSizes,
         careInstructions,
         features,
         colors,
         tags,
+        variants,
         gsm: formData.gsm || undefined,
       };
 
@@ -330,10 +362,10 @@ export default function EditProductPage() {
         {/* Pricing */}
         <Card>
           <CardHeader>
-            <CardTitle>Pricing & Inventory</CardTitle>
+            <CardTitle>Pricing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">MRP (₹) *</label>
                 <input
@@ -370,18 +402,6 @@ export default function EditProductPage() {
                   onChange={(e) => setFormData({ ...formData, maxBargainDiscount: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg bg-background"
                   placeholder="200"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Stock *</label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border rounded-lg bg-background"
-                  placeholder="100"
                 />
               </div>
             </div>
@@ -730,6 +750,112 @@ export default function EditProductPage() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Inventory Matrix */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Inventory (Stock per Variant)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(() => {
+              const effectiveSizes = formData.category === "accessory" ? ["One Size"] : sizes;
+              const totalStock = effectiveSizes.reduce((sum, size) => {
+                if (colors.length > 0) {
+                  return sum + colors.reduce((colorSum, color) => colorSum + (variantStock[`${size}|${color.name}`] || 0), 0);
+                }
+                return sum + (variantStock[`${size}|`] || 0);
+              }, 0);
+
+              if (effectiveSizes.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Add sizes above to configure inventory.
+                  </p>
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2 font-medium">Size</th>
+                          {colors.length > 0 ? (
+                            colors.map((color) => (
+                              <th key={color.name} className="p-2 font-medium text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <div
+                                    className="w-3 h-3 rounded-full border"
+                                    style={{ backgroundColor: color.hex }}
+                                  />
+                                  {color.name}
+                                </div>
+                              </th>
+                            ))
+                          ) : (
+                            <th className="p-2 font-medium text-center">Stock</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {effectiveSizes.map((size) => (
+                          <tr key={size} className="border-b last:border-0">
+                            <td className="p-2 font-medium">{size}</td>
+                            {colors.length > 0 ? (
+                              colors.map((color) => {
+                                const key = `${size}|${color.name}`;
+                                return (
+                                  <td key={key} className="p-2">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={variantStock[key] || 0}
+                                      onChange={(e) =>
+                                        setVariantStock({
+                                          ...variantStock,
+                                          [key]: parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                      className="w-full px-2 py-1 border rounded bg-background text-center"
+                                    />
+                                  </td>
+                                );
+                              })
+                            ) : (
+                              <td className="p-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={variantStock[`${size}|`] || 0}
+                                  onChange={(e) =>
+                                    setVariantStock({
+                                      ...variantStock,
+                                      [`${size}|`]: parseInt(e.target.value) || 0,
+                                    })
+                                  }
+                                  className="w-full px-2 py-1 border rounded bg-background text-center"
+                                />
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">
+                      {effectiveSizes.length * Math.max(colors.length, 1)} variants
+                    </span>
+                    <span className="text-sm font-medium">
+                      Total Stock: <span className={totalStock === 0 ? "text-destructive" : "text-green-500"}>{totalStock}</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 

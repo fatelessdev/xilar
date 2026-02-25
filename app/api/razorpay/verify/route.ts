@@ -137,6 +137,13 @@ export async function POST(req: NextRequest) {
       razorpaySignature: razorpay_signature,
     });
 
+    if (!result.success) {
+      const status = result.error?.toLowerCase().includes("authentication required")
+        ? 401
+        : 400;
+      return NextResponse.json(result, { status });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("Payment verification error:", error);

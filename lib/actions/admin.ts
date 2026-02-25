@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { products, coupons, orders, orderItems } from "@/lib/db/schema";
+import { products, productVariants, coupons, orders, orderItems } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth-server";
-import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
+import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 // ============================================
@@ -28,13 +28,58 @@ export type ProductInput = {
   features?: string[];
   sizes?: string[];
   colors?: { name: string; hex: string; images?: string[] }[];
+  variants?: { size: string; color: string | null; stock: number }[];
   isNew?: boolean;
   isFeatured?: boolean;
   isActive?: boolean;
 };
 
+// Helper: recompute total stock from variants
+async function recomputeProductStock(productId: string) {
+  const result = await db
+    .select({ totalStock: sql<number>`COALESCE(SUM(${productVariants.stock}), 0)` })
+    .from(productVariants)
+    .where(eq(productVariants.productId, productId));
+
+  const totalStock = Number(result[0]?.totalStock ?? 0);
+
+  await db
+    .update(products)
+    .set({ stock: totalStock, updatedAt: new Date() })
+    .where(eq(products.id, productId));
+
+  return totalStock;
+}
+
+// Helper: sync variants for a product (delete old, insert new)
+async function syncProductVariants(
+  productId: string,
+  variants: { size: string; color: string | null; stock: number }[]
+) {
+  // Delete all existing variants for this product
+  await db.delete(productVariants).where(eq(productVariants.productId, productId));
+
+  // Insert new variants
+  if (variants.length > 0) {
+    await db.insert(productVariants).values(
+      variants.map((v) => ({
+        productId,
+        size: v.size,
+        color: v.color,
+        stock: v.stock,
+      }))
+    );
+  }
+
+  // Recompute the total stock on the product
+  return recomputeProductStock(productId);
+}
+
 export async function createProduct(data: ProductInput) {
   await requireAdmin();
+
+  const effectiveSizes = data.sizes || ["S", "M", "L", "XL"];
+  const effectiveColors = data.colors || [];
 
   const [product] = await db
     .insert(products)
@@ -48,19 +93,40 @@ export async function createProduct(data: ProductInput) {
       category: data.category,
       gender: data.gender,
       tags: data.tags || [],
-      stock: data.stock,
+      stock: 0, // Will be computed from variants
       images: data.images || [],
       fabric: data.fabric,
       gsm: data.gsm,
       careInstructions: data.careInstructions || [],
       features: data.features || [],
-      sizes: data.sizes || ["S", "M", "L", "XL"],
-      colors: data.colors || [],
+      sizes: effectiveSizes,
+      colors: effectiveColors,
       isNew: data.isNew ?? false,
       isFeatured: data.isFeatured ?? false,
       isActive: data.isActive ?? true,
     })
     .returning();
+
+  // Create variant rows
+  if (data.variants && data.variants.length > 0) {
+    await syncProductVariants(product.id, data.variants);
+  } else {
+    // Fallback: create variants from sizes × colors with the provided stock split evenly
+    const variantCombos: { size: string; color: string | null; stock: number }[] = [];
+    const totalVariants = effectiveSizes.length * Math.max(effectiveColors.length, 1);
+    const stockPer = totalVariants > 0 ? Math.floor(data.stock / totalVariants) : 0;
+
+    for (const size of effectiveSizes) {
+      if (effectiveColors.length > 0) {
+        for (const color of effectiveColors) {
+          variantCombos.push({ size, color: color.name, stock: stockPer });
+        }
+      } else {
+        variantCombos.push({ size, color: null, stock: stockPer });
+      }
+    }
+    await syncProductVariants(product.id, variantCombos);
+  }
 
   revalidatePath("/admin/products");
   revalidatePath("/shop");
@@ -72,14 +138,22 @@ export async function createProduct(data: ProductInput) {
 export async function updateProduct(id: string, data: Partial<ProductInput>) {
   await requireAdmin();
 
+  // Separate variants from the rest of the data
+  const { variants, ...productData } = data;
+
   const [product] = await db
     .update(products)
     .set({
-      ...data,
+      ...productData,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id))
     .returning();
+
+  // If variants are provided, sync them
+  if (variants) {
+    await syncProductVariants(id, variants);
+  }
 
   revalidatePath("/admin/products");
   revalidatePath(`/product/${id}`);
@@ -147,6 +221,15 @@ export async function getProductBySlug(slug: string) {
     .where(eq(products.slug, slug));
 
   return product;
+}
+
+export async function getProductVariants(productId: string) {
+  const variants = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.productId, productId));
+
+  return variants;
 }
 
 // ============================================
