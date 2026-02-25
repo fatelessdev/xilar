@@ -61,6 +61,14 @@ export const user = pgTable("user", {
   // Order tracking for first-time user detection
   ordersCount: integer("orders_count").notNull().default(0),
   totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).notNull().default("0"),
+  // Saved shipping address (auto-filled on next checkout)
+  shippingAddress: json("shipping_address").$type<{
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+  }>(),
 });
 
 export const session = pgTable("session", {

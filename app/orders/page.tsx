@@ -5,6 +5,7 @@ import Link from "next/link"
 import { getUserOrders } from "@/lib/actions/orders"
 import { getServerSession } from "@/lib/auth-server"
 import { redirect } from "next/navigation"
+import { CancelOrderButton } from "./cancel-button"
 
 export const metadata: Metadata = {
     title: "My Orders",
@@ -132,6 +133,11 @@ export default async function OrdersPage() {
                                     </p>
                                     <p>{order.shippingAddress.phone}</p>
                                 </div>
+                            )}
+
+                            {/* Cancel button for eligible COD orders */}
+                            {order.paymentMethod === "cod" && ["pending", "confirmed"].includes(order.status) && (
+                                <CancelOrderButton orderId={order.id} />
                             )}
                         </div>
                     ))
