@@ -86,6 +86,13 @@ export async function POST(req: NextRequest) {
       paymentMethod: body.paymentMethod,
     });
 
+    if (!result.success) {
+      const status = result.error?.toLowerCase().includes("authentication required")
+        ? 401
+        : 400;
+      return NextResponse.json(result, { status });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("Order creation error:", error);

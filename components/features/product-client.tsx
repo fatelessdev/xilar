@@ -5,7 +5,15 @@ import { ProductGrid } from "@/components/features/product-grid"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useWishlist } from "@/lib/wishlist-context"
-import { Heart, Check, Loader2 } from "lucide-react"
+import { Heart, Check, Loader2, X } from "lucide-react"
+
+interface ProductVariant {
+    id: string;
+    productId: string;
+    size: string;
+    color: string | null;
+    stock: number;
+}
 
 interface Product {
     id: string
@@ -23,6 +31,7 @@ interface Product {
     category: string
     gender: string
     stock: number
+    variants?: ProductVariant[]
 }
 
 export function ProductClient({ id }: { id: string }) {
@@ -36,10 +45,18 @@ export function ProductClient({ id }: { id: string }) {
     const { addItem } = useCart()
     const { isInWishlist, toggleItem } = useWishlist()
 
+    // Scroll to top on navigation
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [id])
+
     useEffect(() => {
         async function fetchProduct() {
             try {
                 setLoading(true)
+                setSelectedSize(null)
+                setSelectedColor(null)
+                setSelectedImage(0)
                 const res = await fetch(`/api/products/${id}`)
                 if (!res.ok) {
                     throw new Error("Product not found")
@@ -54,6 +71,51 @@ export function ProductClient({ id }: { id: string }) {
         }
         fetchProduct()
     }, [id])
+
+    // Helper: get stock for a specific variant (size + color combo)
+    const getVariantStock = (size: string, color: string | null): number => {
+        if (!product?.variants || product.variants.length === 0) {
+            // Fallback to product-level stock if no variants
+            return product?.stock ?? 0
+        }
+        const variant = product.variants.find(
+            (v) => v.size === size && (v.color === color || (v.color === null && color === null))
+        )
+        return variant?.stock ?? 0
+    }
+
+    // Helper: check if a size is available for any color
+    const isSizeAvailable = (size: string): boolean => {
+        if (!product?.variants || product.variants.length === 0) return (product?.stock ?? 0) > 0
+        if (selectedColor) {
+            return getVariantStock(size, selectedColor) > 0
+        }
+        // No color selected: size is available if ANY color has stock for this size
+        if (product.colors && product.colors.length > 0) {
+            return product.colors.some((c) => getVariantStock(size, c.name) > 0)
+        }
+        return getVariantStock(size, null) > 0
+    }
+
+    // Helper: check if a color is available for any size
+    const isColorAvailable = (colorName: string): boolean => {
+        if (!product?.variants || product.variants.length === 0) return (product?.stock ?? 0) > 0
+        if (selectedSize) {
+            return getVariantStock(selectedSize, colorName) > 0
+        }
+        // No size selected: color is available if ANY size has stock for this color
+        return product.sizes.some((s) => getVariantStock(s, colorName) > 0)
+    }
+
+    // Currently selected variant stock
+    const selectedVariantStock = (): number | null => {
+        if (!selectedSize) return null
+        if (product?.colors?.length && product.colors.length > 0 && !selectedColor) return null
+        const color = selectedColor || null
+        return getVariantStock(selectedSize, color)
+    }
+
+    const currentStock = selectedVariantStock()
 
     if (loading) {
         return (
@@ -88,7 +150,10 @@ export function ProductClient({ id }: { id: string }) {
 
     const handleAddToCart = () => {
         if (!selectedSize) return
-        if (product.stock <= 0) return
+        if (product.colors.length > 0 && !selectedColor) return
+        const stock = currentStock
+        if (stock !== null && stock <= 0) return
+        if (product.stock === 0) return
         
         addItem({
             id: product.id,
@@ -165,16 +230,32 @@ export function ProductClient({ id }: { id: string }) {
                                 {!selectedSize && <span className="text-destructive font-normal normal-case">Required</span>}
                             </label>
                             <div className="flex gap-2 flex-wrap">
-                                {product.sizes.map((size) => (
-                                    <Button
-                                        key={size}
-                                        variant={selectedSize === size ? "default" : "outline"}
-                                        className="w-12 h-12 rounded-none border-input hover:border-foreground transition-colors"
-                                        onClick={() => setSelectedSize(size)}
-                                    >
-                                        {size}
-                                    </Button>
-                                ))}
+                                {product.sizes.map((size) => {
+                                    const available = isSizeAvailable(size)
+                                    return (
+                                        <Button
+                                            key={size}
+                                            variant={selectedSize === size ? "default" : "outline"}
+                                            className={`w-12 h-12 rounded-none border-input transition-colors relative ${
+                                                !available
+                                                    ? "opacity-40 cursor-not-allowed line-through"
+                                                    : "hover:border-foreground"
+                                            }`}
+                                            onClick={() => {
+                                                if (available) setSelectedSize(size)
+                                            }}
+                                            disabled={!available}
+                                            title={available ? size : `${size} — Out of Stock`}
+                                        >
+                                            {size}
+                                            {!available && (
+                                                <span className="absolute inset-0 flex items-center justify-center">
+                                                    <span className="block w-[1px] h-full bg-muted-foreground/60 rotate-45 absolute" />
+                                                </span>
+                                            )}
+                                        </Button>
+                                    )
+                                })}
                             </div>
                         </div>
 
@@ -186,30 +267,50 @@ export function ProductClient({ id }: { id: string }) {
                                     {selectedColor && <span className="text-muted-foreground font-normal normal-case">{selectedColor}</span>}
                                 </label>
                                 <div className="flex gap-3 flex-wrap">
-                                    {product.colors.map((color) => (
-                                        <button
-                                            key={color.name}
-                                            type="button"
-                                            className={`w-10 h-10 rounded-full border-2 transition-all ${
-                                                selectedColor === color.name 
-                                                    ? "ring-2 ring-offset-2 ring-foreground ring-offset-background border-foreground" 
-                                                    : "border-border hover:border-foreground"
-                                            }`}
-                                            style={{ backgroundColor: color.hex }}
-                                            onClick={() => setSelectedColor(color.name)}
-                                            title={color.name}
-                                        />
-                                    ))}
+                                    {product.colors.map((color) => {
+                                        const available = isColorAvailable(color.name)
+                                        return (
+                                            <button
+                                                key={color.name}
+                                                type="button"
+                                                className={`w-10 h-10 rounded-full border-2 transition-all relative ${
+                                                    selectedColor === color.name 
+                                                        ? "ring-2 ring-offset-2 ring-foreground ring-offset-background border-foreground" 
+                                                        : available
+                                                            ? "border-border hover:border-foreground"
+                                                            : "border-border opacity-30 cursor-not-allowed"
+                                                }`}
+                                                style={{ backgroundColor: color.hex }}
+                                                onClick={() => {
+                                                    if (available) setSelectedColor(color.name)
+                                                }}
+                                                disabled={!available}
+                                                title={available ? color.name : `${color.name} — Out of Stock`}
+                                            >
+                                                {!available && (
+                                                    <span className="absolute inset-0 flex items-center justify-center">
+                                                        <X className="h-5 w-5 text-white drop-shadow-md" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}
 
                         {/* Stock indicator */}
-                        {product.stock <= 5 && product.stock > 0 && (
-                            <p className="text-sm text-orange-500 font-medium">Only {product.stock} left in stock!</p>
+                        {currentStock !== null && currentStock <= 5 && currentStock > 0 && (
+                            <p className="text-sm text-orange-500 font-medium">Only {currentStock} left in stock for this variant!</p>
                         )}
-                        {product.stock === 0 && (
+                        {currentStock !== null && currentStock === 0 && (
+                            <p className="text-sm text-red-500 font-medium">Out of stock for selected variant</p>
+                        )}
+                        {currentStock === null && product.stock === 0 && (
                             <p className="text-sm text-red-500 font-medium">Out of stock</p>
+                        )}
+                        {currentStock === null && product.stock > 0 && (
+                            <p className="text-sm text-muted-foreground">Select a size to check availability</p>
                         )}
 
                         {/* Actions */}
@@ -219,9 +320,11 @@ export function ProductClient({ id }: { id: string }) {
                                     size="lg"
                                     className="flex-1 h-14 rounded-none text-lg uppercase tracking-widest font-bold disabled:opacity-50"
                                     onClick={handleAddToCart}
-                                    disabled={!selectedSize || product.stock === 0}
+                                    disabled={!selectedSize || (product.colors.length > 0 && !selectedColor) || product.stock === 0 || (currentStock !== null && currentStock === 0)}
                                 >
                                     {product.stock === 0 ? (
+                                        "Out of Stock"
+                                    ) : currentStock !== null && currentStock === 0 ? (
                                         "Out of Stock"
                                     ) : added ? (
                                         <>

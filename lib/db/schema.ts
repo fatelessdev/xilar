@@ -8,6 +8,7 @@ import {
   json,
   uuid,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -146,6 +147,24 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// ============================================
+// PRODUCT VARIANTS TABLE (per-size-per-color stock)
+// ============================================
+
+export const productVariants = pgTable("product_variants", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  size: text("size").notNull(),
+  color: text("color"), // null means default/no-color
+  stock: integer("stock").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("product_variant_unique").on(table.productId, table.size, table.color),
+]);
 
 // ============================================
 // ORDER TABLES
@@ -321,6 +340,14 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const productsRelations = relations(products, ({ many }) => ({
   orderItems: many(orderItems),
   wishlist: many(wishlist),
+  variants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+  product: one(products, {
+    fields: [productVariants.productId],
+    references: [products.id],
+  }),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({

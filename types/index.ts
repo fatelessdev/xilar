@@ -18,6 +18,7 @@ export interface Product {
   features: string[];
   sizes: string[];
   colors: ProductColor[];
+  variants?: ProductVariant[];
   isNew: boolean;
   isFeatured: boolean;
   isActive: boolean;
@@ -29,6 +30,14 @@ export interface ProductColor {
   name: string;
   hex: string;
   images?: string[];
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  size: string;
+  color: string | null;
+  stock: number;
 }
 
 // Cart types

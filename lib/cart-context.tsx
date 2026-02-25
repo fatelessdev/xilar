@@ -72,8 +72,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             removeItem(id, size, color)
             return
         }
+        // Cap at 10 units per variant to prevent abuse (server enforces actual stock limits)
+        const cappedQuantity = Math.min(quantity, 10)
         setItems((prev) =>
-            prev.map((i) => (i.id === id && i.size === size && i.color === color ? { ...i, quantity } : i))
+            prev.map((i) => (i.id === id && i.size === size && i.color === color ? { ...i, quantity: cappedQuantity } : i))
         )
     }
 
