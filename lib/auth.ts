@@ -4,7 +4,19 @@ import { admin } from "better-auth/plugins";
 import { db } from "./db";
 import * as schema from "./db/schema";
 
+const authBaseUrl =
+  process.env.BETTER_AUTH_URL ||
+  process.env.BETTER_AUTH_BASE_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "http://localhost:3000";
+
+const authSecret =
+  process.env.BETTER_AUTH_SECRET ||
+  "xilar-local-dev-secret-change-in-production";
+
 export const auth = betterAuth({
+  baseURL: authBaseUrl,
+  secret: authSecret,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -51,10 +63,7 @@ export const auth = betterAuth({
     }),
   ],
 
-  trustedOrigins: [
-    "http://localhost:3000",
-    process.env.BETTER_AUTH_URL || "",
-  ].filter(Boolean),
+  trustedOrigins: ["http://localhost:3000", authBaseUrl].filter(Boolean),
 });
 
 // Export types

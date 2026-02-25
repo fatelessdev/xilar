@@ -1,51 +1,83 @@
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { ChevronDown } from "lucide-react"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function Hero() {
-    return (
-        <section className="relative h-screen w-full overflow-hidden flex items-center justify-center">
-            {/* Background Image */}
-            <div className="absolute inset-0 bg-neutral-900 z-0">
-                <div className="absolute inset-0 bg-[url('/clothes/clothes-men1.jpeg')] bg-cover bg-center" />
-                <div className="absolute inset-0 bg-black/50" /> {/* Overlay */}
-            </div>
+  const [videoEnded, setVideoEnded] = useState(false);
 
-            <div className="relative z-10 text-center space-y-8 max-w-5xl px-6">
-                {/* Brand Name - YoungLA Style */}
-                <p className="text-gold text-lg md:text-xl tracking-[0.5em] uppercase font-medium">
-                    XILAR
-                </p>
+  return (
+    <section className="relative h-[calc(100svh-3.5rem)] md:h-[calc(100svh-4rem)] w-full overflow-hidden flex items-center justify-center">
+      {/* Background Image / Video */}
+      <div className="absolute inset-0 bg-neutral-900 z-0 select-none">
+        {!videoEnded && (
+          <video
+            src="/landingPage/landingVideo.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover z-20"
+            onEnded={() => setVideoEnded(true)}
+          />
+        )}
+        {/* Fallback/Final Image */}
+        <div
+          className={cn(
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000",
+            videoEnded ? "opacity-100 z-10" : "opacity-0 z-0",
+          )}
+          style={{ backgroundImage: "url('/landingPage/landingImage.png')" }}
+        />
+        <div className="absolute inset-0 bg-black/40 z-30" /> {/* Overlay */}
+      </div>
 
-                {/* Main Tagline */}
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase leading-[0.9]">
-                    THE FUTURE WEAR
-                </h1>
+      <div className="relative z-40 text-center space-y-8 max-w-5xl px-6">
+        {/* Brand Name - YoungLA Style */}
+        <p className="text-gold text-lg md:text-xl tracking-[0.5em] uppercase font-medium">
+          XILAR
+        </p>
 
-                {/* Subtitle */}
-                <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-light tracking-wide">
-                    Elevate your everyday with bold streetwear that defines the next generation.
-                </p>
+        {/* Main Tagline */}
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white uppercase leading-[0.9]">
+          THE FUTURE WEAR
+        </h1>
 
-                {/* CTA Buttons */}
-                <div className="flex items-center justify-center gap-4 pt-4">
-                    <Link href="/shop/men">
-                        <Button size="lg" className="h-14 px-10 text-sm tracking-[0.2em] uppercase rounded-none bg-white text-black hover:bg-gold hover:text-black transition-all font-medium">
-                            Shop Men
-                        </Button>
-                    </Link>
-                    <Link href="/shop/women">
-                        <Button size="lg" variant="outline" className="h-14 px-10 text-sm tracking-[0.2em] uppercase rounded-none border-white/40 hover:border-gold bg-transparent text-white hover:text-gold transition-all font-medium">
-                            Shop Women
-                        </Button>
-                    </Link>
-                </div>
-            </div>
+        {/* Subtitle */}
+        <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-light tracking-wide">
+          Elevate your everyday with bold streetwear that defines the next
+          generation.
+        </p>
 
-            {/* Scroll Indicator */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-                <ChevronDown className="h-8 w-8 text-white/60" />
-            </div>
-        </section>
-    )
+        {/* CTA Buttons */}
+        <div className="flex items-center justify-center gap-4 pt-4">
+          <Link href="/shop/men">
+            <Button
+              size="lg"
+              className="h-14 px-10 text-sm tracking-[0.2em] uppercase rounded-none bg-white text-black hover:bg-gold hover:text-black transition-all font-medium"
+            >
+              Shop Men
+            </Button>
+          </Link>
+          <Link href="/shop/women">
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-14 px-10 text-sm tracking-[0.2em] uppercase rounded-none border-white/40 hover:border-gold bg-transparent text-white hover:text-gold transition-all font-medium"
+            >
+              Shop Women
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 animate-bounce">
+        <ChevronDown className="h-8 w-8 text-white/60" />
+      </div>
+    </section>
+  );
 }
