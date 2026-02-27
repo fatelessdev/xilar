@@ -5,6 +5,7 @@ import { getServerSession } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE, COD_FEE } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const shippingCost = subtotal >= 1499 ? 0 : 99;
-    const codFee = body.paymentMethod === "cod" ? 50 : 0;
+    const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+    const codFee = body.paymentMethod === "cod" ? COD_FEE : 0;
 
     // Validate coupon using canonical rules
     let discount = 0;

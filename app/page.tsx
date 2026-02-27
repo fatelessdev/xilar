@@ -10,14 +10,14 @@ import {
 export const metadata: Metadata = {
   title: "Home | Premium Streetwear for Gen-Z",
   description:
-    "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹1,499.",
+    "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹999.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "XILAR | The Future Wear — Premium Streetwear India",
     description:
-      "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹1,499.",
+      "Shop next-gen streetwear essentials, premium basics, oversized tees, cargos, and bold drops from XILAR. Free shipping above ₹999.",
     url: "/",
   },
 };

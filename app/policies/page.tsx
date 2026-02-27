@@ -6,14 +6,14 @@ import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/components/seo/structured
 export const metadata: Metadata = {
     title: "Store Policies — Exchange, Returns, Refunds & Shipping",
     description:
-        "Read XILAR policies on exchanges (48hr window), returns (defects only), refunds (store credit + 5% bonus), and shipping (free above ₹1,499).",
+        "Read XILAR policies on exchanges (48hr window), returns (defects only), refunds (store credit + 5% bonus), and shipping (free above ₹999).",
     alternates: {
         canonical: "/policies",
     },
     openGraph: {
         title: "Store Policies | XILAR",
         description:
-            "Read XILAR policies on exchanges, returns, refunds, and shipping. Free shipping above ₹1,499.",
+            "Read XILAR policies on exchanges, returns, refunds, and shipping. Free shipping above ₹999.",
         url: "/policies",
     },
 }
@@ -42,7 +42,7 @@ export default function PoliciesPage() {
         },
         {
             title: "Shipping Policy",
-            description: "Free shipping on orders above ₹1,499.",
+            description: "Free shipping on orders above ₹999.",
             href: "/policies/shipping",
             icon: Truck,
         },
@@ -72,7 +72,7 @@ export default function PoliciesPage() {
                     },
                     {
                         question: "What are XILAR's shipping charges?",
-                        answer: "Free shipping on orders above ₹1,499. Standard delivery is ₹99. Cash on Delivery is available with an additional ₹50 fee.",
+                        answer: "Free shipping on orders above ₹999. Standard delivery is ₹99. Cash on Delivery is available with an additional ₹50 fee.",
                     },
                 ])}
             />
@@ -126,7 +126,7 @@ export default function PoliciesPage() {
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-gold">•</span>
-                            <span><strong>Shipping:</strong> Free above ₹1,499, otherwise ₹99. COD available (+₹50 fee).</span>
+                            <span><strong>Shipping:</strong> Free above ₹999, otherwise ₹99. COD available (+₹50 fee).</span>
                         </li>
                     </ul>
                 </div>

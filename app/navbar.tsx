@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ShoppingBag, Heart, Menu, X, User, Package } from "lucide-react";
+import { ShoppingBag, Heart, Menu, X, User, Package, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
+import { FREE_SHIPPING_THRESHOLD_DISPLAY } from "@/lib/constants";
 
 export function Navbar() {
   const { totalItems, setIsOpen } = useCart();
@@ -16,6 +17,14 @@ export function Navbar() {
 
   return (
     <>
+      {/* Free Delivery Banner */}
+      <div className="w-full bg-gold/10 border-b border-gold/20 py-1.5">
+        <div className="flex items-center justify-center gap-2 text-xs tracking-wide text-gold">
+          <Truck className="h-3.5 w-3.5" />
+          <span>Free delivery on orders above {FREE_SHIPPING_THRESHOLD_DISPLAY}</span>
+        </div>
+      </div>
+
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
         <div className="flex h-14 md:h-16 items-center px-4 md:px-6">
           {/* Mobile Menu Toggle */}
