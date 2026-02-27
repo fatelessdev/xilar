@@ -9,6 +9,7 @@ import { Check, CreditCard, Truck, MapPin, Loader2, AlertCircle } from "lucide-r
 import { CheckoutBargain } from "@/components/features/checkout-bargain"
 import { useSession } from "@/lib/auth-client"
 import { getSavedShippingAddress } from "@/lib/actions/orders"
+import { FREE_SHIPPING_THRESHOLD, FREE_SHIPPING_THRESHOLD_DISPLAY, SHIPPING_FEE, COD_FEE } from "@/lib/constants"
 import Script from "next/script"
 
 const CHECKOUT_STORAGE_KEY = "xilar-checkout"
@@ -324,9 +325,9 @@ export default function CheckoutPage() {
         )
     }
 
-    // Calculate pricing: free shipping above ₹1499, otherwise ₹99
-    const shippingCost = totalPrice >= 1499 ? 0 : 99
-    const codFee = paymentMethod === "cod" ? 50 : 0
+    // Calculate pricing: free shipping above threshold, otherwise standard fee
+    const shippingCost = totalPrice >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE
+    const codFee = paymentMethod === "cod" ? COD_FEE : 0
     const discount = appliedCoupon?.discount || 0
     const finalTotal = totalPrice + shippingCost + codFee - discount
 
@@ -647,7 +648,7 @@ export default function CheckoutPage() {
                             <span>₹{totalPrice.toLocaleString("en-IN")}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span>Shipping {totalPrice >= 1499 && <span className="text-green-600 dark:text-green-400">(Free above ₹1,499)</span>}</span>
+                            <span>Shipping {totalPrice >= FREE_SHIPPING_THRESHOLD && <span className="text-green-600 dark:text-green-400">(Free above {FREE_SHIPPING_THRESHOLD_DISPLAY})</span>}</span>
                             <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
                         </div>
                         {paymentMethod === "cod" && (

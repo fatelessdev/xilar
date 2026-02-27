@@ -152,7 +152,7 @@ export function productJsonLd(
         "@type": "OfferShippingDetails",
         shippingRate: {
           "@type": "MonetaryAmount",
-          value: price >= 1499 ? "0" : "99",
+          value: price >= 999 ? "0" : "99",
           currency: "INR",
         },
         shippingDestination: {

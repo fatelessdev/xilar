@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
     title: "Shop All Streetwear",
     description:
-        "Explore the full XILAR streetwear collection. Premium basics, bold fits, oversized tees, cargos, joggers, and everyday essentials. Free shipping above ₹1,499.",
+        "Explore the full XILAR streetwear collection. Premium basics, bold fits, oversized tees, cargos, joggers, and everyday essentials. Free shipping above ₹999.",
     alternates: {
         canonical: "/shop",
     },

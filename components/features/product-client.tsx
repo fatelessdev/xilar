@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { ProductGrid } from "@/components/features/product-grid"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
 import { useWishlist } from "@/lib/wishlist-context"
-import { Heart, Check, Loader2, X } from "lucide-react"
+import { Heart, Check, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface ProductVariant {
     id: string;
@@ -181,17 +182,85 @@ export function ProductClient({ id }: { id: string }) {
     return (
         <div className="min-h-screen bg-background pb-20">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                {/* Gallery Section */}
-                <div className="grid grid-cols-1 gap-1 bg-white/5">
-                    {images.map((img, i) => (
-                        <div
-                            key={i}
-                            className={`aspect-[4/5] w-full relative overflow-hidden bg-neutral-900 border-b border-white/10 lg:border-r lg:border-b-0 cursor-pointer ${selectedImage === i ? "ring-2 ring-foreground" : ""}`}
-                            onClick={() => setSelectedImage(i)}
-                        >
-                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${img})` }} />
+                {/* Gallery Section — Horizontal Slider */}
+                <div className="relative bg-white/5 overflow-hidden group">
+                    <div className="aspect-[4/5] w-full relative">
+                        <AnimatePresence initial={false} mode="popLayout">
+                            <motion.img
+                                key={selectedImage}
+                                src={images[selectedImage]}
+                                alt={`${product.name} — image ${selectedImage + 1}`}
+                                className="absolute inset-0 w-full h-full object-cover object-center"
+                                initial={{ opacity: 0.4 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0.4 }}
+                                transition={{ duration: 0.25 }}
+                                draggable={false}
+                            />
+                        </AnimatePresence>
+
+                        {/* Swipe overlay — invisible drag target */}
+                        {images.length > 1 && (
+                            <motion.div
+                                className="absolute inset-0 z-10 touch-pan-y"
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={0.15}
+                                onDragEnd={(_e, info) => {
+                                    const swipe = info.offset.x
+                                    const velocity = info.velocity.x
+                                    if (swipe < -40 || velocity < -300) {
+                                        setSelectedImage((prev) => Math.min(prev + 1, images.length - 1))
+                                    } else if (swipe > 40 || velocity > 300) {
+                                        setSelectedImage((prev) => Math.max(prev - 1, 0))
+                                    }
+                                }}
+                            />
+                        )}
+
+                        {/* Chevron navigation — desktop hover */}
+                        {images.length > 1 && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                                    onClick={() => setSelectedImage((prev) => Math.max(prev - 1, 0))}
+                                    disabled={selectedImage === 0}
+                                    aria-label="Previous image"
+                                >
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0"
+                                    onClick={() => setSelectedImage((prev) => Math.min(prev + 1, images.length - 1))}
+                                    disabled={selectedImage === images.length - 1}
+                                    aria-label="Next image"
+                                >
+                                    <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Dot indicators */}
+                    {images.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+                            {images.map((_, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    className={`rounded-full transition-all duration-200 ${
+                                        selectedImage === i
+                                            ? "w-6 h-2 bg-gold"
+                                            : "w-2 h-2 bg-neutral-400 hover:bg-neutral-300"
+                                    }`}
+                                    onClick={() => setSelectedImage(i)}
+                                    aria-label={`Go to image ${i + 1}`}
+                                />
+                            ))}
                         </div>
-                    ))}
+                    )}
                 </div>
 
                 {/* Product Info Section */}
@@ -343,7 +412,7 @@ export function ProductClient({ id }: { id: string }) {
                                     <Heart className={`h-5 w-5 ${inWishlist ? "fill-current" : ""}`} />
                                 </Button>
                             </div>
-                            <p className="text-xs text-center text-muted-foreground uppercase">Free shipping on orders above ₹1,499</p>
+                            <p className="text-xs text-center text-muted-foreground uppercase">Free shipping on orders above ₹999</p>
                         </div>
 
                         {/* Features */}

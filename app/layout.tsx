@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | XILAR",
   },
   description:
-    "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹1,499.",
+    "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹999.",
   applicationName: "XILAR",
   keywords: [
     "XILAR",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: "XILAR",
     title: "XILAR | The Future Wear — Premium Streetwear India",
     description:
-      "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹1,499.",
+      "Next-gen streetwear for the bold. Premium basics, oversized fits, and urban essentials. Shop Gen-Z fashion with free shipping above ₹999.",
     url: "/",
     images: [
       {

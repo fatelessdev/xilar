@@ -5,7 +5,7 @@ import { JsonLd, breadcrumbJsonLd, collectionJsonLd } from "@/components/seo/str
 export const metadata: Metadata = {
     title: "Men's Streetwear",
     description:
-        "Shop men's streetwear essentials from XILAR. Oversized tees, cargo pants, joggers, hoodies — elevated fits and bold silhouettes. Free shipping above ₹1,499.",
+        "Shop men's streetwear essentials from XILAR. Oversized tees, cargo pants, joggers, hoodies — elevated fits and bold silhouettes. Free shipping above ₹999.",
     alternates: {
         canonical: "/shop/men",
     },

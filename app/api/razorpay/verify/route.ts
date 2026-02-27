@@ -7,6 +7,7 @@ import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { validateCoupon } from "@/lib/actions/admin";
 import { getServerSession } from "@/lib/auth-server";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const serverShipping = serverSubtotal >= 1499 ? 0 : 99;
+    const serverShipping = serverSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
 
     // Validate coupon using canonical rules (expiry, usage limits, min order, etc.)
     let serverDiscount = 0;
