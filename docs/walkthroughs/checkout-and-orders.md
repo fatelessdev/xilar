@@ -4,9 +4,11 @@
 
 - Customer checkout UI: `app/checkout/page.tsx`
 - COD order route: `app/api/orders/route.ts`
-- Razorpay order route: `app/api/razorpay/route.ts`
-- Razorpay verification route: `app/api/razorpay/verify/route.ts`
-- Order writes and cancellation: `lib/actions/orders.ts`
+- Online checkout start (wallet + Razorpay): `app/api/checkout/wallet-payment/route.ts`
+- Online checkout verification: `app/api/checkout/wallet-payment/verify/route.ts`
+- Refund for captured-but-unfulfilled payments: `lib/checkout/refund.ts`
+- Order intake (not a server action): `lib/checkout/order-intake.ts`
+- Customer order actions and cancellation: `lib/actions/orders.ts`
 - Quote resolver: `lib/checkout/quote.ts`
 - Pure pricing math: `lib/checkout/pricing.ts`
 - Coupon validation: `lib/coupon-validation.ts`
@@ -25,21 +27,21 @@ All payment paths use the same quote resolver. Do not add new subtotal or coupon
 
 ## COD Order Creation
 
-`POST /api/orders` accepts only `paymentMethod: "cod"` and only allowed pincodes from `lib/constants.ts`. It creates a COD quote, then calls `createOrder()` with the verified quote.
+`POST /api/orders` accepts only `paymentMethod: "cod"` and only allowed pincodes from `lib/constants.ts`. It creates a COD quote, then calls `createOrderFromQuote()` with the verified quote.
 
 COD orders get `paymentStatus: "pending"` and include the COD fee in the stored total.
 
 ## Razorpay Flow
 
-`POST /api/razorpay` creates a Razorpay order using the server quote total in paise.
+`POST /api/checkout/wallet-payment` builds the server quote, optionally reserves wallet funds, and creates a Razorpay order for the remainder (in paise). The quote is stored on the `wallet_checkout_payments` row.
 
-`POST /api/razorpay/verify` validates the Razorpay signature, prevents duplicate order creation by checking Razorpay IDs, rebuilds the quote, verifies Razorpay order/captured amounts within the existing one-rupee tolerance, then calls `createOrder()` with `paymentStatus: "paid"`.
+`POST /api/checkout/wallet-payment/verify` validates the Razorpay signature and that the captured amount equals the stored remainder, atomically claims the checkout row, then calls `createOrderFromQuote()` with the stored quote and `paymentStatus: "paid"`. If order creation fails after capture (stock sold out, coupon used up, wallet reservation expired), the wallet reservation is released and the Razorpay payment is refunded; the row is marked `refunded` (or `failed` if the refund call itself failed, which is logged for manual action).
 
 No live charge is needed for local verification unless explicitly authorized.
 
 ## Order Write Contract
 
-`createOrder()` is the single order intake interface. Inside one transaction it:
+`createOrderFromQuote()` (`lib/checkout/order-intake.ts`) is the single order intake interface. Inside one transaction it:
 
 - Revalidates coupon consumption.
 - Inserts the order row.

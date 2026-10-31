@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrderFromQuote } from "@/lib/actions/orders";
+import { createOrderFromQuote } from "@/lib/checkout/order-intake";
 import { getServerSession } from "@/lib/auth-server";
 import { COD_ALLOWED_PINCODES } from "@/lib/constants";
 import { CheckoutQuoteError, createCheckoutQuote } from "@/lib/checkout/quote";

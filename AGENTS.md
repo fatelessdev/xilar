@@ -15,7 +15,7 @@ For each task map out the full scope where the changes are needed like db, api, 
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript 5
 - **Database:** Neon PostgreSQL (serverless) via Drizzle ORM (`lib/db/schema.ts`, `lib/db/index.ts`)
 - **Auth:** Better Auth with admin plugin (`lib/auth.ts`, `lib/auth-server.ts`, `lib/auth-client.ts`)
-- **Payments:** Razorpay (order creation + signature verification) — `lib/razorpay.ts`, `app/api/razorpay/`
+- **Payments:** Razorpay (order creation + signature verification) — `lib/razorpay.ts`, `app/api/checkout/wallet-payment/`
 - **AI:** OpenRouter via Vercel AI SDK — `lib/openrouter.ts`, `app/api/bargain/route.ts`
 - **Images:** Cloudinary CDN with auto-format/quality — `lib/cloudinary.ts`
 - **Styling:** Tailwind CSS 4 + `cn()` utility from `lib/utils.ts`, Lucide icons, Framer Motion
@@ -34,7 +34,7 @@ components/
   ui/             → Primitives (Button, Card) — shadcn-style with variant props, NOT shadcn/ui
 lib/
   actions/        → Server actions (admin.ts, orders.ts, bargain.ts) — all DB mutations go here
-  checkout/       → Server-owned checkout quote, pricing, and validation module
+  checkout/       → Server-owned checkout quote, pricing, validation, order intake, and refund module
   coupon-validation.ts → Public coupon validation and discount math; do not import public coupon rules from admin actions
   bargain/        → Bargain prompt, display labels, pure rules, and DB eligibility context
   db/             → Drizzle schema & connection
@@ -60,7 +60,8 @@ Stored in `localStorage` (keys: `xilar-cart`, `xilar-wishlist`, `xilar-theme`). 
 - Server always recalculates totals from DB prices — never trust client amounts
 - COD order creation, Razorpay order creation, and Razorpay verification must all use `createCheckoutQuote()` from `lib/checkout/quote.ts`
 - Pure money math belongs in `lib/checkout/pricing.ts`; route handlers should not duplicate subtotal/shipping/discount logic
-- Razorpay signature verification on payment confirmation (`app/api/razorpay/verify/route.ts`)
+- Razorpay signature verification on payment confirmation (`app/api/checkout/wallet-payment/verify/route.ts`)
+- A captured Razorpay payment that cannot become an order is refunded via `refundUnfulfilledPayment()` (`lib/checkout/refund.ts`) — never leave a customer charged without an order
 - Coupon validation runs server-side with all business rules (expiry, limits, min order, user restrictions)
 - Shipping: free ≥ ₹999, else ₹99 (see `lib/constants.ts` for source of truth)
 - COD: ₹50 fee, cancellable by the owning customer only while `pending` or `confirmed`; cancellation restores stock and rolls back user metrics
@@ -76,10 +77,10 @@ Stored in `localStorage` (keys: `xilar-cart`, `xilar-wishlist`, `xilar-theme`). 
 ### Payment & Checkout Flow
 Two payment paths in `app/checkout/page.tsx`:
 - **COD:** POST `/api/orders` → creates order directly with `paymentStatus="pending"`, adds ₹50 COD fee
-- **Online (Razorpay):** POST `/api/razorpay` (create order) → open Razorpay modal → POST `/api/razorpay/verify` (signature verification + amount check with ±₹1 tolerance) → `createOrder()` with `paymentStatus="paid"`
+- **Online (Razorpay / wallet):** POST `/api/checkout/wallet-payment` (server quote, optional wallet reservation, Razorpay order for the remainder) → open Razorpay modal → POST `/api/checkout/wallet-payment/verify` (signature + exact captured amount check) → `createOrderFromQuote()` with `paymentStatus="paid"`; on failure the reservation is released and the captured payment refunded
 - Server recalculates totals in both paths — client amounts are never trusted
 - Razorpay payment methods: UPI, Card, NetBanking (validated in verify route)
-- `createOrder()` stays the single order intake write path. Coupon consumption, stock mutation, user metrics, and order item snapshots must remain atomic.
+- `createOrderFromQuote()` in `lib/checkout/order-intake.ts` is the single order intake write path. Coupon consumption, stock mutation, user metrics, and order item snapshots must remain atomic. That module is intentionally **not** `"use server"`: every export of a `"use server"` file becomes a client-callable endpoint, so never put functions that accept totals, prices, `userId`, or payment status in one.
 - Placeholder admin settings are intentionally removed. Do not re-add fake settings controls without a real persistence model.
 
 ### Store Credits & Refunds

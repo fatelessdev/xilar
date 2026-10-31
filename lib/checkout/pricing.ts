@@ -37,7 +37,6 @@ export type BuildCheckoutQuoteInput = {
 
 const MONEY_PRECISION = 100;
 const MIN_PAYABLE_TOTAL = 1;
-const RAZORPAY_AMOUNT_TOLERANCE = 1;
 
 function roundMoney(value: number) {
   return Math.round(value * MONEY_PRECISION) / MONEY_PRECISION;
@@ -100,20 +99,4 @@ export function buildCheckoutQuoteFromVerifiedItems(input: BuildCheckoutQuoteInp
     total,
     couponCode: input.couponCode ? input.couponCode.toUpperCase() : undefined,
   };
-}
-
-export function assertRazorpayAmountMatchesQuote(input: {
-  quoteTotal: number;
-  orderAmountInPaise: number;
-  capturedAmountInPaise: number;
-}) {
-  const orderAmount = Number(input.orderAmountInPaise) / 100;
-  const capturedAmount = Number(input.capturedAmountInPaise) / 100;
-
-  if (
-    Math.abs(orderAmount - input.quoteTotal) > RAZORPAY_AMOUNT_TOLERANCE ||
-    Math.abs(capturedAmount - input.quoteTotal) > RAZORPAY_AMOUNT_TOLERANCE
-  ) {
-    throw new Error("Payment amount mismatch. Please contact support.");
-  }
 }

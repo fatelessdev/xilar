@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  assertRazorpayAmountMatchesQuote,
-  buildCheckoutQuoteFromVerifiedItems,
-} from "./checkout/pricing.ts";
+import { buildCheckoutQuoteFromVerifiedItems } from "./checkout/pricing.ts";
 
 const verifiedItems = [
   {
@@ -80,32 +77,6 @@ describe("checkout pricing", () => {
           paymentMethod: "card",
         }),
       /Price total mismatch/
-    );
-  });
-
-  it("allows Razorpay amount parity within the existing one-rupee tolerance", () => {
-    const quote = buildCheckoutQuoteFromVerifiedItems({
-      items: verifiedItems,
-      paymentMethod: "netbanking",
-      couponDiscount: 25,
-    });
-
-    assert.doesNotThrow(() =>
-      assertRazorpayAmountMatchesQuote({
-        quoteTotal: quote.total,
-        orderAmountInPaise: Math.round((quote.total + 1) * 100),
-        capturedAmountInPaise: Math.round(quote.total * 100),
-      })
-    );
-
-    assert.throws(
-      () =>
-        assertRazorpayAmountMatchesQuote({
-          quoteTotal: quote.total,
-          orderAmountInPaise: Math.round((quote.total + 2) * 100),
-          capturedAmountInPaise: Math.round(quote.total * 100),
-        }),
-      /Payment amount mismatch/
     );
   });
 });
