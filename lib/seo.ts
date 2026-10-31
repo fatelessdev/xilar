@@ -1,3 +1,4 @@
+import type { ProductCategory } from "./product-categories.ts";
 import { CONTACT_EMAIL, CONTACT_PHONE, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "./constants.ts";
 
 export const SITE_NAME = "XILAR";
@@ -63,16 +64,7 @@ export function shouldNoindexCatalogQuery(searchParams: URLSearchParams) {
   return false;
 }
 
-export type ProductCategory =
-  | "tshirt"
-  | "cargo"
-  | "jogger"
-  | "shirt"
-  | "jeans"
-  | "hoodie"
-  | "jacket"
-  | "shorts"
-  | "accessory";
+export type { ProductCategory };
 
 export type CategorySeo = {
   slug: string;
@@ -222,6 +214,63 @@ export const CATEGORY_SEO: CategorySeo[] = [
         question: "How do XILAR jackets fit?",
         answer:
           "Fit depends on the individual jacket. Product pages show available sizes and images so you can choose the right proportion.",
+      },
+    ],
+  },
+  {
+    slug: "shackets",
+    category: "shacket",
+    label: "Shackets",
+    title: "Streetwear Shackets",
+    h1: "Streetwear Shackets",
+    subtitle: "Shirt-weight outer layers for cooler days.",
+    description:
+      "Shop XILAR shackets: shirt-jacket layers for Indian streetwear, relaxed fits, and easy winter styling.",
+    intro:
+      "XILAR shackets sit between a shirt and a jacket: heavy enough to layer over tees, light enough for Indian winters.",
+    faq: [
+      {
+        question: "What is a shacket?",
+        answer:
+          "A shacket is a shirt-jacket: cut like an overshirt with jacket-weight fabric. Wear it open over a tee or buttoned as a top layer.",
+      },
+    ],
+  },
+  {
+    slug: "sweatshirts",
+    category: "sweatshirt",
+    label: "Sweatshirts",
+    title: "Streetwear Sweatshirts",
+    h1: "Streetwear Sweatshirts",
+    subtitle: "Crewneck warmth with relaxed streetwear proportions.",
+    description:
+      "Shop XILAR sweatshirts for relaxed winter layering, premium fleece comfort, and everyday Indian streetwear.",
+    intro:
+      "XILAR sweatshirts are hood-free winter staples: dropped shoulders, clean branding, and easy pairing with cargos or trousers.",
+    faq: [
+      {
+        question: "How do XILAR sweatshirts fit?",
+        answer:
+          "Most XILAR sweatshirts follow a relaxed streetwear fit. Check each product page for available sizes before ordering.",
+      },
+    ],
+  },
+  {
+    slug: "trousers",
+    category: "trousers",
+    label: "Trousers",
+    title: "Streetwear Trousers",
+    h1: "Streetwear Trousers",
+    subtitle: "Tailored-relaxed bottoms for layered winter fits.",
+    description:
+      "Shop XILAR trousers for clean streetwear silhouettes, relaxed tailoring, and versatile Indian everyday outfits.",
+    intro:
+      "XILAR trousers bring a sharper line than cargos or joggers, built to anchor hoodies, sweatshirts, and jackets.",
+    faq: [
+      {
+        question: "Are XILAR trousers sized by waist?",
+        answer:
+          "Yes. XILAR trousers use waist sizes. Product pages show available sizes and live stock before checkout.",
       },
     ],
   },

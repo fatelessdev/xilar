@@ -42,6 +42,9 @@ test("category SEO config covers every public category slug", () => {
     "jeans",
     "hoodies",
     "jackets",
+    "shackets",
+    "sweatshirts",
+    "trousers",
     "shorts",
     "accessories",
   ]);

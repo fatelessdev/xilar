@@ -1,3 +1,5 @@
+import type { ProductCategory } from "@/lib/product-categories";
+
 // Product types matching database schema
 export interface Product {
   id: string;
@@ -7,7 +9,7 @@ export interface Product {
   mrp: string;
   sellingPrice: string;
   maxBargainDiscount: string;
-  category: "tshirt" | "cargo" | "jogger" | "shirt" | "jeans" | "hoodie" | "jacket" | "shorts" | "accessory";
+  category: ProductCategory;
   gender: "men" | "women" | "unisex";
   tags: string[];
   stock: number;

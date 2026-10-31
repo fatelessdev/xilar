@@ -3,6 +3,7 @@ import type { CatalogProduct } from "@/lib/product-catalog";
 export type CatalogFilterOptions = {
   gender?: "men" | "women" | "unisex" | "all";
   fixedCategory?: string;
+  categories?: readonly string[];
   isFeatured?: boolean;
   isNew?: boolean;
   isPremium?: boolean;
@@ -23,6 +24,7 @@ export function filterCatalogProducts(
   {
     gender,
     fixedCategory,
+    categories,
     isFeatured,
     isNew,
     isPremium,
@@ -34,6 +36,7 @@ export function filterCatalogProducts(
   const filteredProducts = products
     .filter((product) => productMatchesGender(product, gender))
     .filter((product) => !fixedCategory || product.category === fixedCategory)
+    .filter((product) => !categories || categories.includes(product.category))
     .filter((product) => !isFeatured || product.isFeatured)
     .filter((product) => !isNew || product.isNew)
     .filter((product) => !isPremium || product.isPremium)

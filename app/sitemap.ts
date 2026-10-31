@@ -40,6 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: buildAbsoluteUrl("/collections/winter", baseUrl),
+      lastModified: staticModified,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: buildAbsoluteUrl("/collections/premium", baseUrl),
       lastModified: staticModified,
       changeFrequency: "weekly",

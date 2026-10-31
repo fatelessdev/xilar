@@ -74,6 +74,7 @@ export function ProductGrid({
     isPremium,
     layout = "grid",
     fixedCategory,
+    categories,
     mobileLimit = 6,
     viewAllHref = "/shop",
     viewAllLabel = "View all products",
@@ -90,6 +91,7 @@ export function ProductGrid({
     isPremium?: boolean
     layout?: "grid" | "scroll"
     fixedCategory?: string
+    categories?: readonly string[]
     mobileLimit?: number
     viewAllHref?: string
     viewAllLabel?: string
@@ -113,12 +115,13 @@ export function ProductGrid({
         return filterCatalogProducts(catalogProducts, {
             gender: resolvedGender,
             fixedCategory,
+            categories,
             isFeatured,
             isNew,
             isPremium,
             limit: enableInfiniteScroll ? null : maxProducts,
         })
-    }, [activeTab, catalogProducts, fixedCategory, gender, isFeatured, isNew, isPremium, maxProducts, showGenderTabs, enableInfiniteScroll])
+    }, [activeTab, catalogProducts, categories, fixedCategory, gender, isFeatured, isNew, isPremium, maxProducts, showGenderTabs, enableInfiniteScroll])
 
     const displayedProducts = useMemo(() => {
         if (enableInfiniteScroll) {
@@ -148,7 +151,7 @@ export function ProductGrid({
     const gridAnimationKey = [
         layout,
         gender || activeTab,
-        fixedCategory || "all",
+        fixedCategory || categories?.join(",") || "all",
         isFeatured ? "featured" : "regular",
         isNew ? "new" : "all",
         isPremium ? "premium" : "standard",

@@ -9,6 +9,7 @@ import { RealReviews } from "@/components/features/real-reviews";
 import { DirectionalMarquee } from "@/components/effects/directional-marquee";
 import { getActiveCombosWithProducts } from "@/lib/combos";
 import { getCatalogProducts } from "@/lib/product-catalog";
+import { WINTER_CATEGORIES } from "@/lib/product-categories";
 import {
   JsonLd,
   organizationJsonLd,
@@ -110,6 +111,14 @@ async function HomeMerchandisingSections() {
 
   return (
     <>
+      <ProductGrid
+        title="Winter Collection"
+        categories={WINTER_CATEGORIES}
+        viewAllHref="/collections/winter"
+        viewAllLabel="Shop the winter collection"
+        initialProducts={products}
+        hideWhenEmpty
+      />
       <ProductGrid title="Best Sellers" isFeatured initialProducts={products} />
       <ComboSection limit={4} interactive={false} mobileLimit={3} initialCombos={combos} />
       <ProductGrid title="New Arrivals" isNew viewAllHref="/new" viewAllLabel="Shop all new arrivals" initialProducts={products} />

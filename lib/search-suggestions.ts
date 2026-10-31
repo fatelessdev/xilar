@@ -1,3 +1,5 @@
+import type { ProductCategory } from "./product-categories.ts";
+
 export type SearchSuggestionProductSource = {
   id: string;
   name: string;
@@ -30,7 +32,7 @@ type PhraseInput = {
   query?: string;
 };
 
-const CATEGORY_LABELS: Record<string, { singular: string; plural: string }> = {
+const CATEGORY_LABELS: Record<ProductCategory, { singular: string; plural: string }> = {
   tshirt: { singular: "tee", plural: "tees" },
   cargo: { singular: "cargo", plural: "cargos" },
   jogger: { singular: "jogger", plural: "joggers" },
@@ -38,6 +40,9 @@ const CATEGORY_LABELS: Record<string, { singular: string; plural: string }> = {
   jeans: { singular: "jeans", plural: "jeans" },
   hoodie: { singular: "hoodie", plural: "hoodies" },
   jacket: { singular: "jacket", plural: "jackets" },
+  shacket: { singular: "shacket", plural: "shackets" },
+  sweatshirt: { singular: "sweatshirt", plural: "sweatshirts" },
+  trousers: { singular: "trousers", plural: "trousers" },
   shorts: { singular: "shorts", plural: "shorts" },
   accessory: { singular: "accessory", plural: "accessories" },
 };
@@ -130,7 +135,7 @@ function cleanDescriptor(value: string) {
 }
 
 function getCategoryLabel(category: string) {
-  return CATEGORY_LABELS[category] || {
+  return CATEGORY_LABELS[category as ProductCategory] || {
     singular: category,
     plural: category.endsWith("s") ? category : `${category}s`,
   };

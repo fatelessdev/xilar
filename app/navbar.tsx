@@ -141,6 +141,7 @@ const overlayLinks = [
   { href: "/shop/men", label: "Men", img: "/hero/image(7).webp" },
   { href: "/shop/women", label: "Women", img: "/hero/image(12).webp" },
   { href: "/shop/accessories", label: "Accessories", img: "/hero/image(13).webp" },
+  { href: "/collections/winter", label: "Winter", img: "/hero/image(5).webp" },
   { href: "/collections/premium", label: "Premium", img: "/hero/image(2).webp" },
   { href: "/collections/summer-26", label: "Summer '26", img: "/hero/image(3).webp" },
 ];
@@ -160,6 +161,7 @@ const searchableCatalogPaths = new Set([
   "/shop/women",
   "/shop/accessories",
   "/collections/premium",
+  "/collections/winter",
   "/new",
 ]);
 

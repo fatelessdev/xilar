@@ -12,23 +12,15 @@ import { getDisplaySizes, useShopCatalog, type CatalogProduct, type ProductPageR
 import { ViewportPrefetchLink } from "@/components/ui/viewport-prefetch-link"
 import { useDebouncedValue } from "@/lib/use-debounced-value"
 import { JsonLd, collectionJsonLd } from "@/components/seo/structured-data"
+import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS, isWaistSizedCategory } from "@/lib/product-categories"
 
-const CATEGORIES = ["All", "tshirt", "shirt", "cargo", "jogger", "jeans", "hoodie", "jacket", "shorts", "accessory"]
+const CATEGORIES = ["All", ...PRODUCT_CATEGORIES]
 const CATEGORY_LABELS: Record<string, string> = {
-    "All": "All",
-    "tshirt": "T-Shirts",
-    "shirt": "Shirts",
-    "cargo": "Cargos",
-    "jogger": "Joggers",
-    "jeans": "Jeans",
-    "hoodie": "Hoodies",
-    "jacket": "Jackets",
-    "shorts": "Shorts",
-    "accessory": "Accessories",
+    All: "All",
+    ...Object.fromEntries(PRODUCT_CATEGORIES.map((category) => [category, PRODUCT_CATEGORY_LABELS[category].plural])),
 }
 const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 const NUMBER_SIZES = ["26", "28", "30", "32", "34"]
-const NUMBER_SIZE_CATEGORIES = ["jogger", "jeans", "cargo", "shorts"]
 const PRICE_RANGES = [
     { label: "All Prices", min: 0, max: Infinity },
     { label: "Under ₹1000", min: 0, max: 1000 },
@@ -330,7 +322,7 @@ export function ShopClient({
                         <div className="space-y-2.5">
                             <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Size</label>
                             <div className="flex flex-wrap gap-1.5">
-                                {(NUMBER_SIZE_CATEGORIES.includes(effectiveSelectedCategory) ? NUMBER_SIZES : effectiveSelectedCategory === "All" ? [...DEFAULT_SIZES, ...NUMBER_SIZES] : DEFAULT_SIZES).map((size) => (
+                                {(isWaistSizedCategory(effectiveSelectedCategory) ? NUMBER_SIZES : effectiveSelectedCategory === "All" ? [...DEFAULT_SIZES, ...NUMBER_SIZES] : DEFAULT_SIZES).map((size) => (
                                     <Button
                                         key={size}
                                         variant={selectedSize === size ? "default" : "outline"}

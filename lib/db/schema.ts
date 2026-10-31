@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { PRODUCT_CATEGORIES } from "../product-categories.ts";
 
 const tsvector = customType<{ data: string; driverData: string }>({
   dataType() {
@@ -31,17 +32,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "delivered",
   "cancelled",
 ]);
-export const productCategoryEnum = pgEnum("product_category", [
-  "tshirt",
-  "cargo",
-  "jogger",
-  "shirt",
-  "jeans",
-  "hoodie",
-  "jacket",
-  "shorts",
-  "accessory",
-]);
+export const productCategoryEnum = pgEnum("product_category", PRODUCT_CATEGORIES);
 export const productGenderEnum = pgEnum("product_gender", [
   "men",
   "women",

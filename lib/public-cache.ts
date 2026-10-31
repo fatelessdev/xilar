@@ -1,4 +1,4 @@
-import { buildProductPath } from "./seo.ts";
+import { CATEGORY_SEO, buildProductPath } from "./seo.ts";
 
 const PUBLIC_PRODUCT_MUTATION_PATHS = [
   "/",
@@ -7,12 +7,14 @@ const PUBLIC_PRODUCT_MUTATION_PATHS = [
   "/shop/women",
   "/shop/accessories",
   "/new",
+  "/collections/winter",
   "/collections/premium",
   "/collections/summer-26",
+  ...CATEGORY_SEO.map((category) => `/shop/${category.slug}`),
   "/gallery",
   "/sitemap.xml",
   "/feeds/google-merchant.xml",
-] as const;
+];
 
 const PUBLIC_COMBO_MUTATION_PATHS = [
   "/",

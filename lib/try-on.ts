@@ -6,8 +6,8 @@ export const TRY_ON_BODY_MODES = ["upper", "lower", "full"] as const;
 export type TryOnBodyMode = (typeof TRY_ON_BODY_MODES)[number];
 export type RequiredTryOnMode = "upper" | "lower" | "unsupported";
 
-const TOP_CATEGORIES = new Set(["tshirt", "shirt", "hoodie", "jacket"]);
-const BOTTOM_CATEGORIES = new Set(["jeans", "cargo", "jogger", "shorts"]);
+const TOP_CATEGORIES = new Set(["tshirt", "shirt", "hoodie", "jacket", "shacket", "sweatshirt"]);
+const BOTTOM_CATEGORIES = new Set(["jeans", "cargo", "jogger", "shorts", "trousers"]);
 const SUPPORTED_TRY_ON_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export function getRequiredTryOnMode(category: string): RequiredTryOnMode {

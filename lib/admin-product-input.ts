@@ -1,20 +1,10 @@
-const PRODUCT_CATEGORIES = [
-  "tshirt",
-  "cargo",
-  "jogger",
-  "shirt",
-  "jeans",
-  "hoodie",
-  "jacket",
-  "shorts",
-  "accessory",
-] as const
+import { isProductCategory, type ProductCategory } from "./product-categories.ts"
 
 const PRODUCT_GENDERS = ["men", "women", "unisex"] as const
 
 export const ACCESSORY_SIZE = "One Size"
 
-export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]
+export type { ProductCategory }
 export type ProductGender = (typeof PRODUCT_GENDERS)[number]
 
 export type ProductVariantInput = {
@@ -133,7 +123,7 @@ function normalizeAmount(value: unknown, label: string, fallback?: string) {
 }
 
 function normalizeCategory(value: unknown) {
-  if (!PRODUCT_CATEGORIES.includes(value as ProductCategory)) {
+  if (!isProductCategory(value)) {
     throw new Error("Category is invalid")
   }
   return value as ProductCategory

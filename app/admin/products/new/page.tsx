@@ -6,20 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createProduct, type ProductInput } from "@/lib/actions/admin";
+import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS, isWaistSizedCategory } from "@/lib/product-categories";
 import { Loader2, Plus, X, Upload } from "lucide-react";
 import Image from "next/image";
 
-const categories = [
-  { value: "tshirt", label: "T-Shirt" },
-  { value: "cargo", label: "Cargo" },
-  { value: "jogger", label: "Jogger" },
-  { value: "shirt", label: "Shirt" },
-  { value: "jeans", label: "Jeans" },
-  { value: "hoodie", label: "Hoodie" },
-  { value: "jacket", label: "Jacket" },
-  { value: "shorts", label: "Shorts" },
-  { value: "accessory", label: "Accessory" },
-];
+const categories = PRODUCT_CATEGORIES.map((value) => ({
+  value,
+  label: PRODUCT_CATEGORY_LABELS[value].singular,
+}));
 
 const genders = [
   { value: "men", label: "Men" },
@@ -29,7 +23,6 @@ const genders = [
 
 const defaultSizes = ["S", "M", "L", "XL", "XXL"];
 const numberSizes = ["26", "28", "30", "32", "34"];
-const NUMBER_SIZE_CATEGORIES = ["jogger", "jeans", "cargo", "shorts"];
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -252,6 +245,9 @@ export default function NewProductPage() {
                   value={formData.category}
                   onChange={(e) => {
                     const category = e.target.value as ProductInput["category"];
+                    if (isWaistSizedCategory(category) !== isWaistSizedCategory(formData.category)) {
+                      setSizes(isWaistSizedCategory(category) ? [...numberSizes] : ["S", "M", "L", "XL"]);
+                    }
                     setFormData((prev) => ({
                       ...prev,
                       category,
@@ -485,7 +481,7 @@ export default function NewProductPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Sizes</label>
               <div className="flex flex-wrap gap-2">
-                {(NUMBER_SIZE_CATEGORIES.includes(formData.category) ? numberSizes : defaultSizes).map((size) => (
+                {(isWaistSizedCategory(formData.category) ? numberSizes : defaultSizes).map((size) => (
                   <button
                     key={size}
                     type="button"
